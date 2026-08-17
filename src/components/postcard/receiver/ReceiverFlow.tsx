@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { Loader2, AlertCircle, Mail, Home } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Loader2, AlertCircle, Mail } from "lucide-react";
 import { ReceiverSplash } from "./ReceiverSplash";
 import { ReceiverView } from "./ReceiverView";
 import { PaperBackground } from "../shared/PaperBackground";
 import { WaxSeal } from "../shared/Decorations";
 import { AirmailDivider } from "../shared/AirmailBorder";
+import { useSound } from "@/hooks/use-sound";
 import type { Surprise, Vibe } from "@/lib/surprises";
 
 interface FetchedPostcard {
@@ -19,6 +20,7 @@ interface FetchedPostcard {
   vibe: string;
   vibeMeta: { label: string; emoji: string };
   surpriseId: string;
+  reaction?: string | null;
 }
 
 interface FetchedSurprise {
@@ -36,6 +38,7 @@ interface FetchedSurprise {
 }
 
 type LoadState = "loading" | "ready" | "notfound" | "error";
+type Phase = "splash" | "opening" | "view";
 
 export function ReceiverFlow({
   token,
@@ -45,9 +48,10 @@ export function ReceiverFlow({
   onGoHome: () => void;
 }) {
   const [state, setState] = useState<LoadState>("loading");
+  const [phase, setPhase] = useState<Phase>("splash");
   const [postcard, setPostcard] = useState<FetchedPostcard | null>(null);
   const [surprise, setSurprise] = useState<FetchedSurprise | null>(null);
-  const [opened, setOpened] = useState(false);
+  const { play } = useSound();
 
   useEffect(() => {
     let cancelled = false;
@@ -74,15 +78,20 @@ export function ReceiverFlow({
   }, [token]);
 
   function handleOpen() {
-    setOpened(true);
+    play("open");
+    setPhase("opening");
+    // mark opened immediately (fire-and-forget)
     fetch(`/api/postcards/${token}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "open" }),
     }).catch(() => {});
+    // after envelope animation, transition to view
+    setTimeout(() => setPhase("view"), 700);
   }
 
   function handleReveal() {
+    play("reveal");
     fetch(`/api/postcards/${token}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -165,14 +174,49 @@ export function ReceiverFlow({
     );
   }
 
-  // ----- Splash (before open) -----
-  if (!opened) {
+  // ----- Splash / opening -----
+  if (phase === "splash" || phase === "opening") {
     return (
-      <ReceiverSplash
-        senderName={postcard?.senderName}
-        city={postcard?.city}
-        onOpen={handleOpen}
-      />
+      <AnimatePresence mode="wait">
+        {phase === "splash" ? (
+          <motion.div
+            key="splash"
+            exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.4 } }}
+          >
+            <ReceiverSplash
+              senderName={postcard?.senderName}
+              city={postcard?.city}
+              onOpen={handleOpen}
+            />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="opening"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="min-h-screen flex flex-col items-center justify-center"
+            style={{ backgroundColor: "var(--paper)" }}
+          >
+            <motion.div
+              initial={{ rotateX: 0, scale: 1 }}
+              animate={{ rotateX: -25, scale: 0.95, opacity: 0.6 }}
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              style={{ transformOrigin: "top center", perspective: 900 }}
+            >
+              <WaxSeal size={80} emoji="✉" />
+            </motion.div>
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="font-handwritten text-base mt-4"
+              style={{ color: "var(--ink-soft)" }}
+            >
+              Envelope khul raha hai...
+            </motion.p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     );
   }
 
@@ -194,19 +238,27 @@ export function ReceiverFlow({
   };
 
   return (
-    <ReceiverView
-      data={{
-        receiverName: postcard.receiverName,
-        city: postcard.city,
-        relationship: postcard.relationship,
-        senderName: postcard.senderName,
-        message: postcard.message,
-        surprise: surpriseTyped,
-        vibeLabel: postcard.vibeMeta.label,
-        vibeEmoji: postcard.vibeMeta.emoji,
-      }}
-      onReveal={handleReveal}
-      onGoHome={onGoHome}
-    />
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+    >
+      <ReceiverView
+        data={{
+          receiverName: postcard.receiverName,
+          city: postcard.city,
+          relationship: postcard.relationship,
+          senderName: postcard.senderName,
+          message: postcard.message,
+          surprise: surpriseTyped,
+          vibeLabel: postcard.vibeMeta.label,
+          vibeEmoji: postcard.vibeMeta.emoji,
+        }}
+        token={token}
+        initialReaction={postcard.reaction}
+        onReveal={handleReveal}
+        onGoHome={onGoHome}
+      />
+    </motion.div>
   );
 }

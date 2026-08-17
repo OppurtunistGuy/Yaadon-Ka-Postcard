@@ -7,14 +7,19 @@ import { PaperBackground } from "../shared/PaperBackground";
 import { AirmailDivider } from "../shared/AirmailBorder";
 import { PostcardCard } from "../shared/PostcardCard";
 import { WaxSeal } from "../shared/Decorations";
+import { ReactionBar } from "./ReactionBar";
 import type { PostcardData } from "../shared/PostcardCard";
 
 export function ReceiverView({
   data,
+  token,
+  initialReaction,
   onReveal,
   onGoHome,
 }: {
   data: PostcardData;
+  token: string;
+  initialReaction?: string | null;
   onReveal: () => void;
   onGoHome: () => void;
 }) {
@@ -126,6 +131,20 @@ export function ReceiverView({
                       Make a Postcard
                     </button>
                   </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Reaction bar — appears after reveal */}
+            <AnimatePresence>
+              {revealed && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="mt-4"
+                >
+                  <ReactionBar token={token} initialReaction={initialReaction} />
                 </motion.div>
               )}
             </AnimatePresence>

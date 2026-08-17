@@ -113,7 +113,7 @@ export function ReceiverSplash({
           disabled={loading}
           whileHover={{ scale: loading ? 1 : 1.03 }}
           whileTap={{ scale: loading ? 1 : 0.97 }}
-          className="btn-vintage font-serif-vintage font-bold px-8 py-3.5 rounded-md tracking-wide text-lg inline-flex items-center gap-2 disabled:opacity-70"
+          className="btn-vintage font-serif-vintage font-bold px-8 py-3.5 rounded-md tracking-wide text-lg inline-flex items-center gap-2 disabled:opacity-70 animate-heartbeat"
         >
           <MailOpen className="w-5 h-5" />
           {loading ? "Opening..." : "Open Postcard"}

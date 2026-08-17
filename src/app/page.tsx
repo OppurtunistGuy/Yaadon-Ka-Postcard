@@ -3,6 +3,7 @@
 import { useSyncExternalStore } from "react";
 import { SenderFlow } from "@/components/postcard/sender/SenderFlow";
 import { ReceiverFlow } from "@/components/postcard/receiver/ReceiverFlow";
+import { SoundToggle } from "@/components/postcard/shared/SoundToggle";
 
 // Subscribe to the URL so we always read the latest `?card=` param.
 function subscribe() {
@@ -28,17 +29,20 @@ function clearCardParam() {
 export default function Home() {
   const cardToken = useSyncExternalStore(subscribe, getCardToken, getServerSnapshot);
 
-  if (cardToken) {
-    return (
-      <ReceiverFlow
-        token={cardToken}
-        onGoHome={() => {
-          clearCardParam();
-          window.location.reload();
-        }}
-      />
-    );
-  }
-
-  return <SenderFlow />;
+  return (
+    <>
+      {cardToken ? (
+        <ReceiverFlow
+          token={cardToken}
+          onGoHome={() => {
+            clearCardParam();
+            window.location.reload();
+          }}
+        />
+      ) : (
+        <SenderFlow />
+      )}
+      <SoundToggle />
+    </>
+  );
 }

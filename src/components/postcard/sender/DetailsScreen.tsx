@@ -107,15 +107,16 @@ export function DetailsScreen() {
                       type="button"
                       onClick={() => updateDraft({ vibe: v.id, surpriseId: null })}
                       className={cn(
-                        "relative paper-grain rounded-md p-3 text-center transition-all vignette",
-                        "hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                        selected ? "scale-[1.02] shadow-lg" : "opacity-90 hover:opacity-100"
+                        "vibe-card relative paper-grain rounded-md p-3 text-center vignette",
+                        selected && "vibe-card-selected",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       )}
                       style={{
                         border: selected
                           ? `2px solid var(--burgundy)`
                           : `1px solid var(--border)`,
                         backgroundColor: selected ? "#f5e7c0" : "#faf2dc",
+                        boxShadow: selected ? "0 6px 16px rgba(90,50,20,0.18)" : undefined,
                       }}
                     >
                       {selected && (
@@ -147,10 +148,10 @@ export function DetailsScreen() {
           </motion.div>
 
           {/* nav */}
-          <div className="mt-6 flex items-center justify-between">
+          <div className="mt-6 flex items-center justify-between gap-3">
             <button
               onClick={() => setStep("intro")}
-              className="inline-flex items-center gap-1 text-sm font-medium hover:opacity-70 transition"
+              className="inline-flex items-center gap-1 text-sm font-medium hover:opacity-70 transition h-11 px-1"
               style={{ color: "var(--ink-soft)" }}
             >
               <ChevronLeft className="w-4 h-4" />
@@ -161,7 +162,7 @@ export function DetailsScreen() {
               disabled={!canContinue}
               onClick={() => canContinue && setStep("surprise")}
               className={cn(
-                "btn-vintage font-serif-vintage font-semibold px-6 py-2.5 rounded-md tracking-wide flex items-center gap-2",
+                "btn-vintage font-serif-vintage font-semibold px-6 py-2.5 rounded-md tracking-wide flex items-center gap-2 h-11",
                 !canContinue && "opacity-50 cursor-not-allowed grayscale"
               )}
             >
@@ -209,7 +210,7 @@ function Field({
         placeholder={placeholder}
         maxLength={maxLength}
         autoFocus={autoFocus}
-        className="w-full font-handwritten text-base px-3 py-2.5 rounded-md outline-none transition-all focus:shadow-md"
+        className="field-vintage w-full font-handwritten text-base px-3 py-2.5 rounded-md outline-none transition-all leading-relaxed"
         style={{
           backgroundColor: "rgba(255, 250, 235, 0.7)",
           border: "1px solid var(--border)",

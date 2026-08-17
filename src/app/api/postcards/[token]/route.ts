@@ -46,6 +46,7 @@ export async function GET(
         createdAt: card.createdAt,
         openedAt: card.openedAt,
         revealedAt: card.revealedAt,
+        reaction: card.reaction,
       },
       // We still hide the full surprise here — the reveal is a separate action
       // so it can be "locked" client-side until tapped. But for the receiver
@@ -73,7 +74,7 @@ export async function GET(
   }
 }
 
-// Mark postcard opened / revealed (lightweight analytics)
+// Mark postcard opened / revealed / reacted (lightweight analytics)
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ token: string }> }
@@ -81,22 +82,27 @@ export async function PATCH(
   try {
     const { token } = await params;
     const body = await req.json().catch(() => ({}));
-    const action = body?.action; // "open" | "reveal"
+    const action = body?.action; // "open" | "reveal" | "react"
+    const reaction = typeof body?.reaction === "string" ? body.reaction.slice(0, 16) : null;
 
     const card = await db.postcard.findUnique({ where: { token } });
     if (!card) {
       return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
     }
 
-    const data: { openedAt?: Date; revealedAt?: Date } = {};
+    const data: { openedAt?: Date; revealedAt?: Date; reaction?: string | null } = {};
     if (action === "open" && !card.openedAt) data.openedAt = new Date();
     if (action === "reveal" && !card.revealedAt) data.revealedAt = new Date();
+    if (action === "react" && reaction !== null) {
+      // allow clearing with empty string, otherwise set
+      data.reaction = reaction || null;
+    }
 
     if (Object.keys(data).length > 0) {
       await db.postcard.update({ where: { token }, data });
     }
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, reaction: data.reaction ?? card.reaction });
   } catch (err) {
     console.error("[PATCH /api/postcards/[token]]", err);
     return NextResponse.json({ ok: false, error: "Update failed" }, { status: 500 });

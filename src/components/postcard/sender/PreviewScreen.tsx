@@ -2,18 +2,22 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Loader2, Wand2 } from "lucide-react";
+import { Loader2, Wand2 } from "lucide-react";
 import { PaperBackground } from "../shared/PaperBackground";
 import { SenderHeader, SenderFooter } from "./SenderChrome";
 import { PostcardCard } from "../shared/PostcardCard";
 import { useSenderStore } from "@/lib/postcard-store";
 import { getSurpriseById, getVibeMeta } from "@/lib/surprises";
 import { useToast } from "@/hooks/use-toast";
+import { useSound } from "@/hooks/use-sound";
+import { useSentPostcards } from "@/hooks/use-sent-postcards";
 
 export function PreviewScreen() {
   const { draft, setStep, setGeneratedToken, setSubmitting, isSubmitting, error, setError } =
     useSenderStore();
   const { toast } = useToast();
+  const { play } = useSound();
+  const { addRecord } = useSentPostcards();
   const vibeMeta = getVibeMeta(draft.vibe ?? "classic");
   const surprise = getSurpriseById(draft.surpriseId ?? "");
   const [revealed, setRevealed] = useState(false);
@@ -22,6 +26,7 @@ export function PreviewScreen() {
     if (!surprise || !draft.vibe) return;
     setSubmitting(true);
     setError(null);
+    play("stamp");
     try {
       const res = await fetch("/api/postcards", {
         method: "POST",
@@ -41,6 +46,16 @@ export function PreviewScreen() {
         throw new Error(data?.errors?.[0] ?? "Could not generate postcard");
       }
       setGeneratedToken(data.token);
+      // record locally so sender can re-open later
+      addRecord({
+        token: data.token,
+        receiverName: draft.receiverName,
+        city: draft.city,
+        vibeLabel: vibeMeta.label,
+        vibeEmoji: vibeMeta.emoji,
+        senderName: draft.senderName,
+      });
+      play("success");
       setStep("share");
       toast({
         title: "Postcard ready! 🎉",
@@ -103,21 +118,27 @@ export function PreviewScreen() {
                   vibeEmoji: vibeMeta.emoji,
                 }}
                 revealState={revealed ? "revealed" : "hidden"}
-                onReveal={() => setRevealed(true)}
+                onReveal={() => {
+                  setRevealed(true);
+                  play("reveal");
+                }}
               />
             )}
 
             <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
               {revealed ? (
                 <button
-                  onClick={() => setRevealed(false)}
+                  onClick={() => {
+                    setRevealed(false);
+                    play("paper");
+                  }}
                   className="btn-pastel text-xs font-medium px-3 py-1.5 rounded"
                 >
                   Re-hide surprise
                 </button>
               ) : (
                 <span
-                  className="font-handwritten text-xs"
+                  className="font-handwritten text-xs animate-nudge"
                   style={{ color: "var(--ink-soft)" }}
                 >
                   👆 tap the blurred area to peek at your surprise

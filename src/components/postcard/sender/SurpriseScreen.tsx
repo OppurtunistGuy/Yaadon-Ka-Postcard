@@ -66,15 +66,16 @@ export function SurpriseScreen() {
                   type="button"
                   onClick={() => updateDraft({ surpriseId: s.id })}
                   className={cn(
-                    "relative text-left rounded-md p-4 transition-all overflow-hidden",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                    selected ? "shadow-lg" : "hover:shadow-md"
+                    "surprise-card paper-grain relative text-left rounded-md p-4 overflow-hidden vignette",
+                    selected && "surprise-card-selected",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   )}
                   style={{
                     border: selected
                       ? `2px solid var(--burgundy)`
                       : `1px solid var(--border)`,
                     backgroundColor: selected ? "#f5e7c0" : "#faf2dc",
+                    boxShadow: selected ? "0 6px 16px rgba(90,50,20,0.16)" : undefined,
                   }}
                 >
                   {/* accent stripe */}

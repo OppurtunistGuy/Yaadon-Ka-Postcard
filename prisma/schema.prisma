@@ -22,6 +22,7 @@ model Postcard {
   message      String
   openedAt     DateTime?
   revealedAt   DateTime?
+  reaction     String?
   createdAt    DateTime @default(now())
 
   @@index([token])

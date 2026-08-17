@@ -110,3 +110,133 @@ Priority recommendations for next phase (for the recurring webDevReview):
 - Add more curated surprises / periodic content refresh.
 - Add a lightweight "postcards I've sent" recent-list via localStorage.
 - Polish micro-animations (envelope open transition between splash → view).
+
+---
+Task ID: 2
+Agent: webDevReview (round 2)
+Task: QA the existing app via agent-browser + VLM, fix bugs, add polish and new
+features (ambient sound, recent-sent list, receiver reactions, envelope-open
+transition), verify end-to-end.
+
+Work Log:
+- Reviewed round-1 worklog; MVP was complete & stable.
+- Ran `bun run lint` — clean (0 errors). Dev server healthy, no runtime errors.
+- Performed thorough visual QA via agent-browser + VLM across all screens:
+  - Intro, Details, Surprise grid, Message+preview, Preview, Share, Receiver
+    splash, Receiver view, Reveal, Not-found.
+  - VLM confirmed vintage aesthetic is strong; collected concrete polish notes:
+    stamps need grounding/shadows, form fields need focus states, vibe cards
+    need hover lift, footer icon ambiguity, ruled-line variance, etc.
+- POLISH — postcard visual depth (`Stamp.tsx`):
+  - Rewrote `PostageStamp` with proper notched perforated edge (radial-gradient
+    scallops), drop shadow, inner frame line, ink-grunge overlay, paper-grain
+    texture on the stamp body.
+  - Rewrote `Postmark` with outer+inner dashed rings, ink-bleed texture
+    overlay (multiply blend), rotated text, animated drop-in.
+- POLISH — globals.css additions:
+  - `.ruled-lines-margin` variant with red margin line (inland letter style).
+  - New animations: `envelope-open` (3D perspective fold), `slide-up-fade`,
+    `heartbeat` (splash CTA), `reaction-pop`, `nudge` (reveal hint), `sound-pulse`.
+  - `.paper-fold` crease shadow, `.ink-stamp` approval-stamp style.
+  - `.field-vintage:focus` — airmail-blue focus ring for form inputs.
+  - `.vibe-card` / `.surprise-card` hover-lift utility classes.
+  - `.reaction-chip` hover/active transitions.
+- POLISH — DetailsScreen:
+  - Vibe cards now use `.vibe-card` lift class (translateY + shadow on hover),
+    selected state has stronger shadow + scale.
+  - Form inputs use `.field-vintage` for airmail-blue focus ring.
+  - Nav buttons aligned to consistent h-11 height, items-center.
+- POLISH — SurpriseScreen:
+  - Surprise cards use `.surprise-card` lift class + paper-grain + vignette,
+    selected state stronger shadow.
+- POLISH — IntroScreen:
+  - Stamps now spring-drop in with staggered rotations, grounded by a shared
+    baseline shadow strip.
+  - Hero text leading tightened, "Hide a feeling" weight bumped to bold.
+  - Feature cards stagger in with inset shadow.
+  - Footer icon replaced ambiguous wax-seal with a clear postbox-style mail
+    icon (burgundy box with slot).
+- FEATURE — Ambient sound (`use-sound.ts` + `SoundToggle.tsx`):
+  - Procedural Web Audio API sound effects (no external files): stamp thud,
+    paper rustle, soft click, envelope open, magical reveal chime, success
+    fanfare.
+  - Floating toggle (bottom-right, fixed) with pulse animation when enabled.
+  - Persisted to localStorage via `useSyncExternalStore`.
+  - Wired into: intro "Create" (stamp), preview reveal (reveal/reveal),
+    re-hide (paper), generate (stamp→success), receiver open (open),
+    reveal (reveal), reaction click (click).
+- FEATURE — "Postcards I've sent" recent list (`use-sent-postcards.ts` +
+  `SentPostcardsList.tsx`):
+  - Records created postcards in localStorage (max 6), shown on intro screen
+    below feature cards.
+  - Each record: mini vibe stamp, "To: name · city", "Vibe · from sender",
+    open-as-receiver + delete buttons.
+  - Uses `useSyncExternalStore` with in-memory cache for stable snapshots
+    (avoids infinite re-render).
+  - Sender flow records new postcards on link generation.
+- FEATURE — Receiver emoji reactions (`ReactionBar.tsx` + API + DB):
+  - Added `reaction` column to `Postcard` model, pushed to SQLite.
+  - PATCH `/api/postcards/[token]` now accepts `action: "react"` + `reaction`.
+  - GET returns `reaction`; receiver view hydrates initial selection.
+  - 6 reactions (Hansi/Pyaar/Rula diya/Aag/Wah!/Jadoo ki jappi) with pop
+    animation, floating emoji burst on tap, confirmation text, checkmark on
+    selected. Appears after reveal.
+- FEATURE — Envelope-open transition (`ReceiverFlow.tsx`):
+  - Splash → "opening" phase (wax seal folds back in 3D perspective, 0.7s)
+    → postcard view slides up with fade.
+  - Sound "open" plays during transition.
+- BUG FIX: Prisma client was stale after adding `reaction` column — ran
+  `bun run db:generate` + restarted dev server so PATCH/GET include reaction.
+- BUG FIX: `useSentPostcards` initially caused infinite re-render because
+  `getSnapshot` returned a new array each call. Fixed with an in-memory cache
+  invalidated on writes.
+- BUG FIX: Import path typo `@lib/` → `@/lib/` in PreviewScreen caused
+  module-not-found; fixed.
+- Verification (agent-browser + curl):
+  - Created postcard (Aarav/Delhi/Bhai/Meera, Jolly, Johnny Lever surprise) →
+    token V2CD-R6VS-3YKK generated, success toast.
+  - Returned to intro → "Postcards you've sent" section shows the record
+    (mini stamp, receiver, vibe, open/delete buttons). VLM confirmed polished.
+  - Opened receiver link → splash "Meera ne bheja hai 💌" → Open Postcard →
+    envelope-open transition → postcard view → "Pehle message padho..." →
+    tap reveal → Johnny Lever surprise + reaction bar + CTA.
+  - Tapped ❤️ (Pyaar) → "Pyaar bhej diya ✓" + checkmark on chip.
+  - curl PATCH `{"action":"react","reaction":"heart"}` → 200 `{"ok":true,
+    "reaction":"heart"}`; subsequent GET returns `"reaction":"heart"`.
+    Confirmed persisted to DB.
+  - VLM confirmed: reaction bar well-integrated & on-theme, selected reaction
+    clearly indicated, post-reveal CTA polished.
+  - `bun run lint` clean, dev.log shows all 200s with `reaction` column in
+    Prisma queries, no runtime errors.
+
+Stage Summary:
+- All 4 polish areas + 4 new features delivered & verified.
+- Postcard visuals deepened (perforated stamps, ink-bleed postmarks, paper
+  grain, focus rings, card hover lifts).
+- Ambient sound system (procedural, no files) with persistent toggle.
+- "Postcards I've sent" localStorage recent list with open/delete.
+- Receiver emoji reactions persisted to DB (6 reactions, pop animations).
+- Envelope-open 3D transition between splash and postcard view.
+- Lint clean, all API + DB + UI verified end-to-end.
+- Artifacts: `src/hooks/use-sound.ts`, `src/hooks/use-sent-postcards.ts`,
+  `src/components/postcard/shared/SoundToggle.tsx`,
+  `src/components/postcard/sender/SentPostcardsList.tsx`,
+  `src/components/postcard/receiver/ReactionBar.tsx`,
+  updated `Stamp.tsx`, `globals.css`, `IntroScreen.tsx`, `DetailsScreen.tsx`,
+  `SurpriseScreen.tsx`, `PreviewScreen.tsx`, `ReceiverFlow.tsx`,
+  `ReceiverView.tsx`, `page.tsx`, `schema.prisma`, API routes.
+
+Unresolved / notes:
+- Dev server process management in this sandbox requires keeping commands
+  within a single bash session (background processes die between sessions).
+  The system auto-runs `bun run dev` at session start; manual restarts use
+  `nohup ./node_modules/.bin/next dev -p 3000`.
+- Tenor gif URLs remain externally linked (not embedded) to keep the app
+  self-contained.
+
+Priority recommendations for next round:
+- Add OG image / share preview so WhatsApp shows a postcard thumbnail.
+- Add a "sender sees receiver's reaction" view (poll the reaction field).
+- Add more curated surprises / periodic content refresh.
+- Add subtle ambient background loop (postbox ambience) when sound is on.
+- Add keyboard accessibility pass (focus traps in modals, tab order).
