@@ -1,0 +1,28 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Postcard {
+  id           String   @id @default(cuid())
+  token        String   @unique
+  receiverName String
+  city         String
+  relationship String
+  senderName   String
+  vibe         String
+  surpriseId   String
+  message      String
+  openedAt     DateTime?
+  revealedAt   DateTime?
+  createdAt    DateTime @default(now())
+
+  @@index([token])
+}

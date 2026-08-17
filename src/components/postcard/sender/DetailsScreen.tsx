@@ -1,0 +1,221 @@
+"use client";
+
+import { motion } from "framer-motion";
+import { ChevronLeft, ArrowRight, Check } from "lucide-react";
+import { PaperBackground } from "../shared/PaperBackground";
+import { AirmailDivider } from "../shared/AirmailBorder";
+import { SenderHeader, SenderFooter } from "./SenderChrome";
+import { useSenderStore } from "@/lib/postcard-store";
+import { VIBES } from "@/lib/surprises";
+import { cn } from "@/lib/utils";
+
+export function DetailsScreen() {
+  const { draft, updateDraft, setStep } = useSenderStore();
+
+  const canContinue =
+    draft.receiverName.trim() &&
+    draft.city.trim() &&
+    draft.relationship.trim() &&
+    draft.senderName.trim() &&
+    draft.vibe;
+
+  return (
+    <PaperBackground className="min-h-screen flex flex-col">
+      <SenderHeader step={1} total={4} title="Who's it for?" />
+
+      <main className="flex-1 px-4 sm:px-8 py-6">
+        <div className="max-w-2xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="paper-grain paper-stains rounded-lg p-5 sm:p-6 vignette"
+            style={{ border: "1px solid var(--border)" }}
+          >
+            <h2
+              className="font-serif-vintage text-2xl font-bold mb-1"
+              style={{ color: "var(--burgundy)" }}
+            >
+              Address the postcard
+            </h2>
+            <p
+              className="font-handwritten text-sm mb-5"
+              style={{ color: "var(--ink-soft)" }}
+            >
+              Puraani tarah &mdash; naam, sheher, rishta, aur apna naam bhi.
+            </p>
+
+            <div className="grid sm:grid-cols-2 gap-4">
+              <Field
+                label="Receiver's Name"
+                emoji="👤"
+                placeholder="e.g. Rahul"
+                value={draft.receiverName}
+                onChange={(v) => updateDraft({ receiverName: v })}
+                maxLength={60}
+                autoFocus
+              />
+              <Field
+                label="City / Location"
+                emoji="📍"
+                placeholder="e.g. Mumbai"
+                value={draft.city}
+                onChange={(v) => updateDraft({ city: v })}
+                maxLength={60}
+              />
+              <Field
+                label="Relationship"
+                emoji="🤝"
+                placeholder="e.g. Best Friend, Bhai, Ma"
+                value={draft.relationship}
+                onChange={(v) => updateDraft({ relationship: v })}
+                maxLength={40}
+              />
+              <Field
+                label="Your Name"
+                emoji="✍️"
+                placeholder="e.g. Priya"
+                value={draft.senderName}
+                onChange={(v) => updateDraft({ senderName: v })}
+                maxLength={60}
+              />
+            </div>
+
+            <AirmailDivider className="my-6" />
+
+            {/* Vibe selector */}
+            <div>
+              <h3
+                className="font-serif-vintage text-lg font-bold mb-1"
+                style={{ color: "var(--burgundy)" }}
+              >
+                Pick the vibe
+              </h3>
+              <p
+                className="font-handwritten text-sm mb-4"
+                style={{ color: "var(--ink-soft)" }}
+              >
+                Yeh decide karega ki surprise kaunsa hoga.
+              </p>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {VIBES.map((v) => {
+                  const selected = draft.vibe === v.id;
+                  return (
+                    <button
+                      key={v.id}
+                      type="button"
+                      onClick={() => updateDraft({ vibe: v.id, surpriseId: null })}
+                      className={cn(
+                        "relative paper-grain rounded-md p-3 text-center transition-all vignette",
+                        "hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                        selected ? "scale-[1.02] shadow-lg" : "opacity-90 hover:opacity-100"
+                      )}
+                      style={{
+                        border: selected
+                          ? `2px solid var(--burgundy)`
+                          : `1px solid var(--border)`,
+                        backgroundColor: selected ? "#f5e7c0" : "#faf2dc",
+                      }}
+                    >
+                      {selected && (
+                        <span
+                          className="absolute -top-2 -right-2 w-5 h-5 rounded-full flex items-center justify-center shadow"
+                          style={{ backgroundColor: "var(--burgundy)" }}
+                        >
+                          <Check className="w-3 h-3 text-white" />
+                        </span>
+                      )}
+                      <div className="text-3xl mb-1.5">{v.emoji}</div>
+                      <div
+                        className="font-serif-vintage font-bold text-sm leading-tight"
+                        style={{ color: "var(--burgundy)" }}
+                      >
+                        {v.label}
+                      </div>
+                      <div
+                        className="font-handwritten text-[11px] mt-0.5 leading-tight"
+                        style={{ color: "var(--ink-soft)" }}
+                      >
+                        {v.tagline}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </motion.div>
+
+          {/* nav */}
+          <div className="mt-6 flex items-center justify-between">
+            <button
+              onClick={() => setStep("intro")}
+              className="inline-flex items-center gap-1 text-sm font-medium hover:opacity-70 transition"
+              style={{ color: "var(--ink-soft)" }}
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Back
+            </button>
+
+            <button
+              disabled={!canContinue}
+              onClick={() => canContinue && setStep("surprise")}
+              className={cn(
+                "btn-vintage font-serif-vintage font-semibold px-6 py-2.5 rounded-md tracking-wide flex items-center gap-2",
+                !canContinue && "opacity-50 cursor-not-allowed grayscale"
+              )}
+            >
+              Choose a Surprise
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </main>
+      <SenderFooter />
+    </PaperBackground>
+  );
+}
+
+function Field({
+  label,
+  emoji,
+  placeholder,
+  value,
+  onChange,
+  maxLength,
+  autoFocus,
+}: {
+  label: string;
+  emoji: string;
+  placeholder: string;
+  value: string;
+  onChange: (v: string) => void;
+  maxLength?: number;
+  autoFocus?: boolean;
+}) {
+  return (
+    <label className="block">
+      <span
+        className="font-serif-vintage text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 mb-1.5"
+        style={{ color: "var(--burgundy)" }}
+      >
+        <span className="text-sm">{emoji}</span>
+        {label}
+      </span>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        maxLength={maxLength}
+        autoFocus={autoFocus}
+        className="w-full font-handwritten text-base px-3 py-2.5 rounded-md outline-none transition-all focus:shadow-md"
+        style={{
+          backgroundColor: "rgba(255, 250, 235, 0.7)",
+          border: "1px solid var(--border)",
+          color: "var(--ink)",
+        }}
+      />
+    </label>
+  );
+}

@@ -1,0 +1,370 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-playfair);
+  --font-hand: var(--font-kalam);
+  --font-hand-cursive: var(--font-caveat);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 0.625rem;
+  /* Aged paper background */
+  --background: oklch(0.965 0.018 85);
+  --foreground: oklch(0.28 0.04 50);
+  /* Postcard cream card */
+  --card: oklch(0.975 0.022 85);
+  --card-foreground: oklch(0.28 0.04 50);
+  --popover: oklch(0.975 0.022 85);
+  --popover-foreground: oklch(0.28 0.04 50);
+  /* Deep burgundy / postal red */
+  --primary: oklch(0.42 0.15 28);
+  --primary-foreground: oklch(0.975 0.015 85);
+  /* Warm taupe */
+  --secondary: oklch(0.9 0.02 75);
+  --secondary-foreground: oklch(0.32 0.04 50);
+  /* Faded khaki */
+  --muted: oklch(0.91 0.025 80);
+  --muted-foreground: oklch(0.48 0.03 55);
+  /* Vintage gold accent */
+  --accent: oklch(0.72 0.12 80);
+  --accent-foreground: oklch(0.25 0.04 50);
+  --destructive: oklch(0.5 0.2 28);
+  /* Sepia borders */
+  --border: oklch(0.82 0.03 70);
+  --input: oklch(0.86 0.025 75);
+  --ring: oklch(0.55 0.13 28);
+  --chart-1: oklch(0.55 0.15 28);
+  --chart-2: oklch(0.6 0.12 184);
+  --chart-3: oklch(0.5 0.09 240);
+  --chart-4: oklch(0.78 0.15 84);
+  --chart-5: oklch(0.7 0.16 70);
+  --sidebar: oklch(0.965 0.018 85);
+  --sidebar-foreground: oklch(0.28 0.04 50);
+  --sidebar-primary: oklch(0.42 0.15 28);
+  --sidebar-primary-foreground: oklch(0.975 0.015 85);
+  --sidebar-accent: oklch(0.91 0.025 80);
+  --sidebar-accent-foreground: oklch(0.32 0.04 50);
+  --sidebar-border: oklch(0.82 0.03 70);
+  --sidebar-ring: oklch(0.55 0.13 28);
+
+  /* Postcard-specific palette */
+  --paper: #f7eed8;
+  --paper-dark: #ecdfc0;
+  --ink: #3b2418;
+  --ink-soft: #6b4a35;
+  --burgundy: #7a1f23;
+  --postal-red: #b4351f;
+  --postal-blue: #1f4a7a;
+  --gold: #b8862a;
+  --airmail-blue: #2b5d8e;
+  --airmail-red: #c63832;
+  --stamp-green: #4a6b3a;
+}
+
+.dark {
+  --background: oklch(0.2 0.02 60);
+  --foreground: oklch(0.92 0.02 80);
+  --card: oklch(0.24 0.025 65);
+  --card-foreground: oklch(0.92 0.02 80);
+  --popover: oklch(0.24 0.025 65);
+  --popover-foreground: oklch(0.92 0.02 80);
+  --primary: oklch(0.62 0.15 28);
+  --primary-foreground: oklch(0.14 0.02 60);
+  --secondary: oklch(0.3 0.02 65);
+  --secondary-foreground: oklch(0.92 0.02 80);
+  --muted: oklch(0.3 0.02 65);
+  --muted-foreground: oklch(0.7 0.02 70);
+  --accent: oklch(0.65 0.12 80);
+  --accent-foreground: oklch(0.14 0.02 60);
+  --destructive: oklch(0.6 0.19 22);
+  --border: oklch(0.38 0.025 65);
+  --input: oklch(0.34 0.02 65);
+  --ring: oklch(0.5 0.13 28);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "ss01";
+  }
+}
+
+/* ===== Vintage Postcard Design System ===== */
+
+/* Aged paper texture overlay */
+.paper-grain {
+  position: relative;
+}
+.paper-grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: 0.5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.22 0 0 0 0 0.12 0 0 0 0.12 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+}
+
+/* Paper fibres / stains */
+.paper-stains {
+  background-image:
+    radial-gradient(ellipse at 18% 22%, rgba(150, 100, 50, 0.12) 0%, transparent 35%),
+    radial-gradient(ellipse at 82% 78%, rgba(120, 70, 40, 0.1) 0%, transparent 40%),
+    radial-gradient(circle at 50% 90%, rgba(180, 130, 70, 0.08) 0%, transparent 30%),
+    radial-gradient(circle at 8% 88%, rgba(100, 60, 30, 0.1) 0%, transparent 25%);
+}
+
+/* Airmail border — red & blue diagonal stripes */
+.airmail-border {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--airmail-red) 0,
+    var(--airmail-red) 14px,
+    #f7eed8 14px,
+    #f7eed8 28px,
+    var(--airmail-blue) 28px,
+    var(--airmail-blue) 42px,
+    #f7eed8 42px,
+    #f7eed8 56px
+  );
+}
+
+/* Thin airmail edge */
+.airmail-edge-thin {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--airmail-red) 0,
+    var(--airmail-red) 6px,
+    #f7eed8 6px,
+    #f7eed8 12px,
+    var(--airmail-blue) 12px,
+    var(--airmail-blue) 18px,
+    #f7eed8 18px,
+    #f7eed8 24px
+  );
+}
+
+/* Handwritten text */
+.font-handwritten {
+  font-family: var(--font-kalam), cursive;
+  letter-spacing: 0.01em;
+}
+.font-handwritten-cursive {
+  font-family: var(--font-caveat), cursive;
+}
+.font-serif-vintage {
+  font-family: var(--font-playfair), Georgia, serif;
+}
+
+/* Postmark circular stamp effect */
+.postmark {
+  border: 2px solid var(--postal-red);
+  color: var(--postal-red);
+  border-radius: 50%;
+  font-family: var(--font-geist-mono), monospace;
+  text-transform: uppercase;
+  opacity: 0.72;
+  transform: rotate(-12deg);
+  position: relative;
+}
+.postmark::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border: 1px dashed var(--postal-red);
+  border-radius: 50%;
+  opacity: 0.6;
+}
+
+/* Wax seal */
+.wax-seal {
+  background: radial-gradient(circle at 35% 30%, #a52828 0%, #7a1f23 55%, #5a1518 100%);
+  box-shadow:
+    inset -2px -3px 6px rgba(0,0,0,0.4),
+    inset 2px 2px 4px rgba(255,180,180,0.25),
+    0 2px 4px rgba(0,0,0,0.3);
+  border-radius: 50%;
+}
+
+/* Torn/taped edge */
+.tape {
+  background: rgba(225, 210, 160, 0.55);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  backdrop-filter: blur(1px);
+}
+
+/* Ruled lines for the message area */
+.ruled-lines {
+  background-image: repeating-linear-gradient(
+    transparent,
+    transparent 31px,
+    rgba(74, 107, 58, 0.28) 31px,
+    rgba(74, 107, 58, 0.28) 32px
+  );
+}
+
+/* Subtle vignette for aged feel */
+.vignette {
+  box-shadow: inset 0 0 60px rgba(90, 50, 20, 0.18);
+}
+
+/* Postage stamp perforated edge */
+.stamp-perforation {
+  position: relative;
+}
+.stamp-perforation::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  background:
+    radial-gradient(circle at 0 0, transparent 5px, var(--stamp-bg, #f7eed8) 5.5px) 0 0 / 12px 12px,
+    radial-gradient(circle at 0 0, transparent 5px, var(--stamp-bg, #f7eed8) 5.5px) 6px 6px / 12px 12px;
+  -webkit-mask:
+    radial-gradient(circle at 6px 6px, #000 5px, transparent 5.5px) repeat-x 0 0 / 12px 12px,
+    radial-gradient(circle at 6px 6px, #000 5px, transparent 5.5px) repeat-x 0 100% / 12px 12px,
+    radial-gradient(circle at 6px 6px, #000 5px, transparent 5.5px) repeat-y 0 0 / 12px 12px,
+    radial-gradient(circle at 6px 6px, #000 5px, transparent 5.5px) repeat-y 100% 0 / 12px 12px;
+  z-index: -1;
+}
+
+/* Faded ink look */
+.ink-faded {
+  color: var(--ink-soft);
+}
+
+/* Vintage button */
+.btn-vintage {
+  background: linear-gradient(180deg, #8a262a 0%, #6e1b1f 100%);
+  color: #f7eed8;
+  border: 1px solid #5a1518;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    0 2px 0 #4a1013,
+    0 3px 6px rgba(0,0,0,0.25);
+  transition: all 0.15s ease;
+}
+.btn-vintage:hover {
+  background: linear-gradient(180deg, #9a2c30 0%, #7a1f23 100%);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.18),
+    0 3px 0 #4a1013,
+    0 5px 8px rgba(0,0,0,0.28);
+}
+.btn-vintage:active {
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.1),
+    0 1px 0 #4a1013,
+    0 1px 2px rgba(0,0,0,0.2);
+}
+
+/* Soft pastel button */
+.btn-pastel {
+  background: linear-gradient(180deg, #faf2dc 0%, #f0e3c2 100%);
+  color: var(--ink);
+  border: 1px solid #d8c89e;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.6),
+    0 2px 3px rgba(0,0,0,0.08);
+  transition: all 0.15s ease;
+}
+.btn-pastel:hover {
+  background: linear-gradient(180deg, #fdf6e3 0%, #f4e8cc 100%);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.7),
+    0 3px 5px rgba(0,0,0,0.1);
+}
+
+/* Reveal shimmer */
+@keyframes reveal-glow {
+  0% { filter: blur(14px) brightness(0.7); opacity: 0.6; transform: scale(0.98); }
+  60% { filter: blur(3px) brightness(0.95); opacity: 0.95; transform: scale(1.01); }
+  100% { filter: blur(0) brightness(1); opacity: 1; transform: scale(1); }
+}
+.animate-reveal {
+  animation: reveal-glow 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Gentle float */
+@keyframes float-soft {
+  0%, 100% { transform: translateY(0) rotate(-1deg); }
+  50% { transform: translateY(-6px) rotate(0.5deg); }
+}
+.animate-float-soft {
+  animation: float-soft 5s ease-in-out infinite;
+}
+
+/* Stamp drop */
+@keyframes stamp-drop {
+  0% { transform: scale(2.5) rotate(-25deg); opacity: 0; }
+  60% { transform: scale(0.92) rotate(-9deg); opacity: 1; }
+  100% { transform: scale(1) rotate(-12deg); opacity: 0.72; }
+}
+.animate-stamp-drop {
+  animation: stamp-drop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Slow wiggle for envelope flap hint */
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-1.5deg); }
+  75% { transform: rotate(1.5deg); }
+}
+.animate-wiggle {
+  animation: wiggle 2.5s ease-in-out infinite;
+}
+
+/* Custom scrollbar */
+.styled-scroll::-webkit-scrollbar { width: 8px; }
+.styled-scroll::-webkit-scrollbar-track { background: transparent; }
+.styled-scroll::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+.styled-scroll::-webkit-scrollbar-thumb:hover { background: var(--ink-soft); }
