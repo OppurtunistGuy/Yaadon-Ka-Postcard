@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Copy, Check, RefreshCw, Link2, MessageCircle, Plus } from "lucide-react";
+import { Copy, Check, Link2, MessageCircle, Plus } from "lucide-react";
 import { PaperBackground } from "../shared/PaperBackground";
 import { AirmailDivider } from "../shared/AirmailBorder";
 import { SenderFooter } from "./SenderChrome";
 import { WaxSeal, Tape } from "../shared/Decorations";
-import { PostageStamp, Postmark } from "../shared/Stamp";
+import { PostageStamp } from "../shared/Stamp";
+import { DeliveryStatus } from "./DeliveryStatus";
 import { useSenderStore } from "@/lib/postcard-store";
 import { useToast } from "@/hooks/use-toast";
 
@@ -200,6 +201,13 @@ export function ShareScreen() {
               Create another
             </button>
           </div>
+
+          {/* Delivery status — live tracking */}
+          {generatedToken && (
+            <div className="mt-6">
+              <DeliveryStatus token={generatedToken} />
+            </div>
+          )}
 
           <div className="mt-8 flex justify-center">
             <WaxSeal size={56} emoji="❤" />

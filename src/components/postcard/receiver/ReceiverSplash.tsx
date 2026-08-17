@@ -28,8 +28,11 @@ export function ReceiverSplash({
       >
         {/* postbox */}
         <motion.div
-          animate={{ rotate: [-1, 1, -1] }}
-          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+          animate={{ rotate: [-1, 1, -1], y: [0, -5, 0] }}
+          transition={{
+            rotate: { duration: 5, repeat: Infinity, ease: "easeInOut" },
+            y: { duration: 3.5, repeat: Infinity, ease: "easeInOut" },
+          }}
           className="relative mx-auto w-40 h-44 mb-6"
         >
           {/* postbox body */}
@@ -120,9 +123,9 @@ export function ReceiverSplash({
         </motion.button>
 
         <motion.div
-          animate={{ y: [0, -4, 0], opacity: [0.6, 1, 0.6] }}
-          transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-          className="mt-4 inline-flex items-center gap-1.5 text-xs"
+          animate={{ y: [0, -3, 0], opacity: [0.7, 1, 0.7] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          className="mt-3 flex items-center justify-center gap-1.5 text-xs"
           style={{ color: "var(--ink-soft)" }}
         >
           <Hand className="w-3.5 h-3.5" />

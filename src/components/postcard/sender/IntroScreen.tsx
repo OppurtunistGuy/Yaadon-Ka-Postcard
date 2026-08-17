@@ -64,9 +64,14 @@ export function IntroScreen() {
               transition={{ delay: 0.1, type: "spring", stiffness: 120 }}
               className="hidden sm:block"
             >
-              <PostageStamp accent="#b4351f" rotate={-8}>
-                <StampFace emoji="💌" label="Love" />
-              </PostageStamp>
+              <motion.div
+                animate={{ rotate: [-8, -5, -8] }}
+                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <PostageStamp accent="#b4351f" rotate={-8}>
+                  <StampFace emoji="💌" label="Love" />
+                </PostageStamp>
+              </motion.div>
             </motion.div>
             <motion.div
               initial={{ y: -40, opacity: 0, rotate: 10 }}
@@ -85,9 +90,14 @@ export function IntroScreen() {
               transition={{ delay: 0.3, type: "spring", stiffness: 120 }}
               className="hidden sm:block"
             >
-              <PostageStamp accent="#4a6b3a" rotate={9}>
-                <StampFace emoji="✨" label="Yaad" />
-              </PostageStamp>
+              <motion.div
+                animate={{ rotate: [9, 6, 9] }}
+                transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+              >
+                <PostageStamp accent="#4a6b3a" rotate={9}>
+                  <StampFace emoji="✨" label="Yaad" />
+                </PostageStamp>
+              </motion.div>
             </motion.div>
           </div>
 
@@ -137,13 +147,29 @@ export function IntroScreen() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 + idx * 0.08 }}
-                className="paper-grain paper-stains rounded-md p-3 text-center vignette"
+                whileHover={{ y: -3 }}
+                className="paper-grain paper-stains rounded-md p-4 text-center vignette relative overflow-hidden"
                 style={{
                   border: "1px solid var(--border)",
-                  boxShadow: "inset 0 0 10px rgba(139, 69, 19, 0.05)",
+                  backgroundColor: "#faf2dc",
+                  boxShadow:
+                    "inset 0 0 14px rgba(139, 69, 19, 0.08), 0 1px 0 rgba(255,255,255,0.5) inset, 0 2px 4px rgba(90,50,20,0.06)",
                 }}
               >
-                <div className="text-[26px] mb-1 leading-none">{w.emoji}</div>
+                {/* paper edge accent */}
+                <div
+                  className="absolute top-0 left-0 right-0 h-1 opacity-50"
+                  style={{
+                    background:
+                      "linear-gradient(90deg, transparent, rgba(122,31,35,0.3), transparent)",
+                  }}
+                />
+                <div
+                  className="text-3xl mb-1.5 leading-none"
+                  style={{ filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.1))" }}
+                >
+                  {w.emoji}
+                </div>
                 <div
                   className="font-serif-vintage text-xs font-bold leading-tight"
                   style={{ color: "var(--burgundy)" }}

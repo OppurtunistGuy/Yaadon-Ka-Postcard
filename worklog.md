@@ -240,3 +240,104 @@ Priority recommendations for next round:
 - Add more curated surprises / periodic content refresh.
 - Add subtle ambient background loop (postbox ambience) when sound is on.
 - Add keyboard accessibility pass (focus traps in modals, tab order).
+
+---
+Task ID: 3
+Agent: webDevReview (round 3)
+Task: QA the app via agent-browser + VLM, fix any bugs, add OG share image +
+delivery-status polling + polish, verify end-to-end.
+
+Work Log:
+- Reviewed round-1 & round-2 worklogs; MVP + polish (sound, recent list,
+  reactions, envelope transition) all complete & stable.
+- Ran `bun run lint` — clean (0 errors). Dev server health verified.
+- Performed visual QA via agent-browser + VLM: intro rated 8.5/10, receiver
+  splash strong. VLM suggested: hero stamps could sway, feature cards need
+  more depth, CTA tactile shadow, integrate "tap to open" below button,
+  postbox float animation, and OG share image for WhatsApp previews.
+- FEATURE — Dynamic OG share image (`src/app/api/og/route.tsx`):
+  - Uses `next/og` ImageResponse to generate a 1200x630 PNG per postcard.
+  - Shows: "Yaadon ka Postcard" header, postmark (DELIVERED · CITY), "To:
+    RECEIVER (relationship)" line, vibe stamp, message hook, sender signature,
+    and a mystery surprise strip ("A hidden Bollywood surprise awaits" —
+    deliberately doesn't spoil the specific character for click-through).
+  - Airmail red/blue diagonal stripes top & bottom.
+  - `runtime = "nodejs"` (Prisma needs node, not edge); `force-dynamic`.
+  - Renamed route.ts → route.tsx (Satori JSX needs .tsx extension).
+  - Fixed Satori error: all multi-child divs now have explicit `display: flex`.
+  - VLM rated the OG image 8.5/10: "production-ready, will perform very well
+    as social share creative... emotional weight of seeing your name on a
+    postcard is a powerful psychological trigger."
+- FEATURE — Dynamic OpenGraph metadata (`src/app/page.tsx` server component):
+  - Refactored page.tsx into a server component with `generateMetadata` that
+    reads `?card=` from searchParams and returns card-specific OG title,
+    description, image URL (pointing to `/api/og?token=...`), twitter card.
+  - Extracted client logic into `src/app/HomeClient.tsx`.
+  - Added `NEXT_PUBLIC_SITE_URL` env var for absolute OG URLs.
+  - Default (sender) metadata for the non-card route.
+- FEATURE — Sender delivery status (`DeliveryStatus.tsx`):
+  - New card on the ShareScreen that polls `GET /api/postcards/[token]` every
+    20s to show: (1) Postcard posted ✓, (2) Receiver opened it (with timeAgo),
+    (3) Surprise revealed (with timeAgo).
+  - When receiver reacts, shows the emoji reaction large with spring pop +
+    "Yay! Message pohonch gaya dil tak. 💌".
+  - Manual refresh button, auto-refresh indicator, Hinglish micro-copy.
+  - Integrates with existing `openedAt`/`revealedAt`/`reaction` DB fields.
+- POLISH — IntroScreen:
+  - All 3 hero stamps now have gentle sway animations (rotate keyframes,
+    staggered delays) on top of the existing spring-drop + float.
+  - Feature cards: deeper with `inset 0 0 14px` shadow + white inset top +
+    drop shadow + paper-edge accent stripe + hover lift (whileHover y:-3) +
+    larger emoji with drop-shadow.
+- POLISH — ReceiverSplash:
+  - Postbox now floats (y axis bobbing) in addition to the rotate sway.
+  - "tap to open" hint moved cleanly BELOW the button (was awkwardly beside),
+    centered with the hand icon.
+- QA tooling: built a robust `ref()` bash helper using `agent-browser
+  snapshot -i` + `grep -oE 'e[0-9]+' | tail -1 | sed 's/^/@/'` for reliable
+  element ref extraction across navigations (refs go stale on page change).
+- End-to-end verification (agent-browser + curl, single session):
+  - Full sender flow: Vikram/Jaipur/School Friend/Anjali → Jolly → Johnny
+    Lever surprise → message → preview → generate → token KMB5-X3VT-5RBG.
+  - Form fields filled correctly (verified via snapshot).
+  - OG image: `curl /api/og?token=KMB5-X3VT-5RBG` → HTTP 200, 58KB PNG,
+    1200x630, content-type image/png. VLM confirmed all elements present.
+  - Receiver flow: splash → Open → postcard view → Tap to reveal → reaction
+    bar → tapped ❤️ (Pyaar) → "Pyaar bhej diya ✓".
+  - DB state confirmed via curl GET: openedAt, revealedAt, reaction="❤️"
+    all persisted correctly.
+  - VLM analysis of share screen confirmed Delivery Status card renders with
+    3-step timeline, refresh button, auto-refresh indicator, on-theme styling.
+  - `bun run lint` clean, dev.log shows all 200s, no runtime errors.
+
+Stage Summary:
+- 3 new features delivered & verified: dynamic OG share image, dynamic OG
+  metadata, sender delivery-status polling card.
+- 2 polish areas: intro stamps sway + feature card depth, receiver splash
+  postbox float + tap-to-open placement.
+- OG image is production-ready (8.5/10 VLM) — WhatsApp/social link shares
+  now show a personalized vintage postcard thumbnail.
+- Delivery status lets senders see when their postcard was opened/revealed
+  and what reaction the receiver sent back — closes the emotional loop.
+- Lint clean, full E2E verified (sender→generate→OG→receiver→reveal→react→DB).
+- Artifacts: `src/app/api/og/route.tsx`, `src/app/page.tsx` (server),
+  `src/app/HomeClient.tsx`, `src/components/postcard/sender/DeliveryStatus.tsx`,
+  updated `ShareScreen.tsx`, `IntroScreen.tsx`, `ReceiverSplash.tsx`, `.env`.
+
+Unresolved / notes:
+- OG image uses `runtime = "nodejs"` (not edge) because Prisma requires node.
+  This is fine for the current SQLite setup; if scaling, consider a separate
+  edge-friendly data source for OG lookups.
+- The `NEXT_PUBLIC_SITE_URL` defaults to localhost; in production it should
+  be set to the real domain so OG image URLs are absolute.
+- Dev server process management in this sandbox: background processes die
+  between bash sessions. All testing done within single bash invocations
+  using a robust `ref()` helper with `agent-browser snapshot -i`.
+
+Priority recommendations for next round:
+- Add a "copy postcard image" button (download the OG PNG to share directly).
+- Add more curated surprises / periodic content refresh.
+- Add keyboard accessibility pass (focus traps, tab order, aria-labels).
+- Add a "remix this postcard" option on the receiver view (create your own
+  with the same vibe but different surprise).
+- Consider ambient background loop (postbox ambience) when sound is on.
