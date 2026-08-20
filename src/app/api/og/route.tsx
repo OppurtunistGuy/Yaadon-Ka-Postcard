@@ -22,15 +22,25 @@ export async function GET(req: Request) {
     return new Response("Missing token", { status: 400 });
   }
 
-  let card = null;
+  let card: any = null;
   try {
     card = await db.postcard.findUnique({ where: { token } });
   } catch {
     // fall through to fallback
   }
 
+  if (!card && token && token.startsWith("P_")) {
+    try {
+      const json = Buffer.from(token.slice(2), "base64url").toString("utf-8");
+      card = JSON.parse(json);
+    } catch {
+      // ignore
+    }
+  }
+
   const surprise = card ? getSurpriseById(card.surpriseId) : undefined;
   const vibeMeta = card ? getVibeMeta(card.vibe as "jolly" | "romantic" | "action" | "classic") : undefined;
+
 
   const receiverName = card?.receiverName ?? "My Dear";
   const senderName = card?.senderName ?? "Yaadon ka Postcard";

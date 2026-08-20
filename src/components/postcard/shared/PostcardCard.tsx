@@ -5,10 +5,15 @@ import { cn } from "@/lib/utils";
 import { PaperBackground } from "./PaperBackground";
 import { AirmailBorder } from "./AirmailBorder";
 import { PostageStamp, Postmark } from "./Stamp";
-import { WaxSeal, LoveRibbon } from "./Decorations";
+import { WaxSeal } from "./Decorations";
+import { GifDisplay } from "./GifDisplay";
 import type { Surprise } from "@/lib/surprises";
+import { getFestivalTheme } from "@/lib/festival-themes";
+import { validateHttpsUrl } from "@/lib/security";
+import { ExternalLink } from "lucide-react";
 
 export interface PostcardData {
+  themeId?: string | null;
   receiverName: string;
   city: string;
   relationship: string;
@@ -17,17 +22,11 @@ export interface PostcardData {
   surprise: Surprise;
   vibeLabel: string;
   vibeEmoji: string;
+  musicUrl?: string | null;
+  musicPlatform?: "youtube" | "spotify" | null;
+  musicTitle?: string | null;
 }
 
-/**
- * The full visual postcard — aged paper, airmail border, stamp + postmark,
- * ruled message area with handwritten text, and a surprise slot at the bottom.
- *
- * `revealState`:
- *  - "hidden" → surprise area is blurred & locked (preview / receiver pre-reveal)
- *  - "revealed" → surprise is shown with reveal animation
- *  - "plain" → no surprise shown at all (sender message step)
- */
 export const PostcardCard = forwardRef<
   HTMLDivElement,
   {
@@ -45,16 +44,31 @@ export const PostcardCard = forwardRef<
   const isRevealed = revealState === "revealed";
   const isPlain = revealState === "plain";
 
+  const theme = getFestivalTheme(data.themeId);
+  const validatedMusicUrl = validateHttpsUrl(data.musicUrl);
+
   return (
     <PaperBackground
+      ref={ref}
       className={cn(
-        "rounded-lg overflow-hidden shadow-2xl vignette",
+        "rounded-lg overflow-hidden shadow-2xl vignette relative",
         className
       )}
+      style={{ backgroundColor: theme.paperTint }}
     >
       {/* Airmail outer border */}
       <AirmailBorder thickness="md">
-        <div className="p-4 sm:p-5">
+        <div className="p-4 sm:p-5 relative">
+          {/* Corner theme decoration icon */}
+          {theme.cornerDecorationEmoji && (
+            <div
+              className="absolute top-2 right-2 text-sm opacity-40 select-none pointer-events-none"
+              aria-hidden
+            >
+              {theme.cornerDecorationEmoji}
+            </div>
+          )}
+
           {/* ===== Header: stamps + postmark ===== */}
           <div className="flex items-start justify-between gap-3">
             <div className="flex flex-col gap-1 min-w-0">
@@ -66,23 +80,33 @@ export const PostcardCard = forwardRef<
               </div>
               <div
                 className="font-serif-vintage text-lg sm:text-xl font-bold leading-tight"
-                style={{ color: "var(--burgundy)" }}
+                style={{ color: theme.accentColor }}
               >
                 Yaadon ka Postcard
               </div>
-              <LoveRibbon />
+              <div
+                className="inline-flex items-center gap-1 text-[10px] tracking-[0.18em] uppercase"
+                style={{ color: "var(--ink-soft)" }}
+              >
+                <span>{theme.ribbonText}</span>
+              </div>
             </div>
 
             <div className="flex items-start gap-2 shrink-0">
-              <Postmark city={data.city || "India"} date={date} animate={isRevealed} />
-              <PostageStamp accent={data.surprise.accent} rotate={-4}>
-                <div className="w-[52px] h-[60px] flex flex-col items-center justify-center gap-0.5 px-1 py-1">
+              <Postmark
+                label={theme.postmarkText}
+                city={data.city || "India"}
+                date={date}
+                animate={isRevealed}
+              />
+              <PostageStamp accent={theme.accentColor} rotate={-4}>
+                <div className="w-[54px] h-[62px] flex flex-col items-center justify-center gap-0.5 px-1 py-1">
                   <span className="text-xl leading-none">{data.vibeEmoji}</span>
                   <span
-                    className="font-serif-vintage text-[7px] font-bold leading-tight uppercase tracking-wide"
-                    style={{ color: "var(--burgundy)" }}
+                    className="font-serif-vintage text-[7px] font-bold leading-tight uppercase tracking-wide text-center"
+                    style={{ color: theme.accentColor }}
                   >
-                    {data.vibeLabel}
+                    {theme.stampLabel}
                   </span>
                   <span className="text-[6px] leading-tight text-center" style={{ color: "var(--ink-soft)" }}>
                     Postage · ₹2
@@ -132,7 +156,6 @@ export const PostcardCard = forwardRef<
             >
               {data.message || "Your heartfelt message will appear here..."}
             </p>
-            {/* ink fade at edges */}
             <div className="pointer-events-none absolute inset-0 vignette rounded-sm" />
           </div>
 
@@ -147,25 +170,29 @@ export const PostcardCard = forwardRef<
               </div>
               <div
                 className="font-handwritten-cursive text-2xl sm:text-3xl leading-tight truncate"
-                style={{ color: "var(--burgundy)" }}
+                style={{ color: theme.accentColor }}
               >
                 {data.senderName || "—"}
               </div>
             </div>
             {!isPlain && (
               <div className="flex items-center gap-2 shrink-0">
-                <WaxSeal size={42} emoji={data.vibeEmoji} />
+                <WaxSeal size={42} emoji={theme.waxSealEmoji} />
               </div>
             )}
           </div>
 
           {/* ===== Surprise section ===== */}
-          {!isPlain && (
+          {!isPlain && data.surprise && (
             <SurpriseSlot
               surprise={data.surprise}
+              themeAccent={theme.accentColor}
               isLocked={isLocked}
               isRevealed={isRevealed}
               onReveal={onReveal}
+              musicUrl={validatedMusicUrl}
+              musicPlatform={data.musicPlatform}
+              musicTitle={data.musicTitle}
             />
           )}
         </div>
@@ -176,34 +203,39 @@ export const PostcardCard = forwardRef<
 
 function SurpriseSlot({
   surprise,
+  themeAccent,
   isLocked,
   isRevealed,
   onReveal,
+  musicUrl,
+  musicPlatform,
+  musicTitle,
 }: {
   surprise: Surprise;
+  themeAccent: string;
   isLocked: boolean;
   isRevealed: boolean;
   onReveal?: () => void;
+  musicUrl?: string | null;
+  musicPlatform?: "youtube" | "spotify" | null;
+  musicTitle?: string | null;
 }) {
+  const accent = surprise.accent || themeAccent;
+
   return (
     <div className="mt-4">
-      {/* divider */}
       <div className="flex items-center gap-2 mb-2">
         <div className="h-px flex-1" style={{ background: "var(--border)" }} />
         <span
           className="font-serif-vintage text-[9px] uppercase tracking-[0.25em]"
           style={{ color: "var(--ink-soft)" }}
         >
-          A little surprise
+          {musicUrl ? "Surprise & Song 🎵" : "A little surprise"}
         </span>
         <div className="h-px flex-1" style={{ background: "var(--border)" }} />
       </div>
 
-      <button
-        type="button"
-        onClick={isLocked ? onReveal : undefined}
-        disabled={!isLocked}
-        aria-label={isLocked ? "Tap to reveal the surprise" : undefined}
+      <div
         className={cn(
           "group relative w-full text-left rounded-md overflow-hidden transition-all",
           isLocked
@@ -211,23 +243,20 @@ function SurpriseSlot({
             : "cursor-default"
         )}
         style={{
-          border: `1px dashed ${surprise.accent}`,
-          backgroundColor: isLocked ? "rgba(243, 230, 196, 0.5)" : "transparent",
+          border: `1.5px dashed ${accent}`,
+          backgroundColor: isLocked ? "rgba(243, 230, 196, 0.5)" : "#faf2dc",
         }}
+        onClick={isLocked ? onReveal : undefined}
       >
         {isLocked ? (
           <div className="p-4 flex items-center justify-center gap-3 min-h-[110px]">
-            {/* blurred preview */}
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center select-none">
               <div className="blur-md scale-110 opacity-60">
                 <span className="text-5xl">{surprise.emoji}</span>
               </div>
             </div>
             <div className="relative flex flex-col items-center gap-1 text-center z-10">
-              <span
-                className="text-2xl animate-float-soft"
-                aria-hidden
-              >
+              <span className="text-2xl animate-float-soft" aria-hidden>
                 🎁
               </span>
               <span
@@ -240,67 +269,101 @@ function SurpriseSlot({
                 className="text-[10px] italic"
                 style={{ color: "var(--ink-soft)" }}
               >
-                Shhh... it's a secret worth the wait
+                Shhh... it&apos;s a secret worth the wait
               </span>
             </div>
           </div>
         ) : (
           <div className={cn("p-4", isRevealed && "animate-reveal")}>
-            <div className="flex items-start gap-3">
-              <div
-                className="w-12 h-12 rounded-md flex items-center justify-center text-2xl shrink-0 shadow-inner"
-                style={{
-                  backgroundColor: surprise.accent,
-                  color: "#fff",
-                }}
-              >
-                {surprise.emoji}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-baseline gap-2 flex-wrap">
-                  <span
-                    className="font-serif-vintage font-bold text-sm"
+            <div className="flex flex-col gap-3">
+              <div className="flex items-start gap-3">
+                <div
+                  className="w-12 h-12 rounded-md flex items-center justify-center text-2xl shrink-0 shadow-inner"
+                  style={{
+                    backgroundColor: accent,
+                    color: "#fff",
+                  }}
+                >
+                  {surprise.emoji}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-baseline gap-2 flex-wrap">
+                    <span
+                      className="font-serif-vintage font-bold text-sm"
+                      style={{ color: "var(--ink)" }}
+                    >
+                      {surprise.character}
+                    </span>
+                    {surprise.movie && (
+                      <span
+                        className="text-[10px] italic"
+                        style={{ color: "var(--ink-soft)" }}
+                      >
+                        · {surprise.movie}
+                      </span>
+                    )}
+                  </div>
+                  <div
+                    className="font-handwritten text-[15px] leading-snug mt-1"
                     style={{ color: "var(--ink)" }}
                   >
-                    {surprise.character}
-                  </span>
-                  {surprise.movie && (
-                    <span
-                      className="text-[10px] italic"
-                      style={{ color: "var(--ink-soft)" }}
-                    >
-                      · {surprise.movie}
-                    </span>
-                  )}
+                    &ldquo;{surprise.quote}&rdquo;
+                  </div>
+                  <div
+                    className="text-[11px] mt-1.5 italic"
+                    style={{ color: "var(--ink-soft)" }}
+                  >
+                    {surprise.caption}
+                  </div>
                 </div>
+              </div>
+
+              {/* Music Card — Only opens upon explicit user interaction */}
+              {musicUrl && (
                 <div
-                  className="font-handwritten text-[15px] leading-snug mt-1"
-                  style={{ color: "var(--ink)" }}
+                  className="mt-1 p-3 rounded-md flex items-center justify-between gap-3 border vignette"
+                  style={{
+                    backgroundColor: "rgba(122,31,35,0.06)",
+                    borderColor: accent,
+                  }}
                 >
-                  &ldquo;{surprise.quote}&rdquo;
-                </div>
-                <div
-                  className="text-[11px] mt-1.5 italic"
-                  style={{ color: "var(--ink-soft)" }}
-                >
-                  {surprise.caption}
-                </div>
-                {surprise.gifUrl && (
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-amber-900 text-amber-100 text-sm animate-pulse shrink-0">
+                      🎵
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-serif-vintage text-xs font-bold" style={{ color: "var(--burgundy)" }}>
+                        A song for you
+                      </div>
+                      <div className="text-[10px] italic truncate" style={{ color: "var(--ink-soft)" }}>
+                        {musicTitle || (musicPlatform === "spotify" ? "Spotify Track" : "YouTube Song")}
+                      </div>
+                    </div>
+                  </div>
+
                   <a
-                    href={surprise.gifUrl}
+                    href={musicUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 mt-2 text-[10px] font-medium underline decoration-dotted underline-offset-2 hover:opacity-80"
-                    style={{ color: "var(--postal-blue)" }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="inline-flex items-center gap-1.5 text-xs font-serif-vintage font-bold px-3 py-1.5 rounded shadow-sm hover:shadow transition shrink-0"
+                    style={{
+                      backgroundColor: musicPlatform === "spotify" ? "#1db954" : "#ff0000",
+                      color: "#ffffff",
+                    }}
                   >
-                    ▶ Watch the moment
+                    <span>Listen on {musicPlatform === "spotify" ? "Spotify" : "YouTube"}</span>
+                    <ExternalLink className="w-3 h-3" />
                   </a>
-                )}
-              </div>
+                </div>
+              )}
+
+              {/* Render selected GIF safely via GifDisplay */}
+              <GifDisplay gif={surprise.gif || surprise.gifUrl} title={surprise.title} />
             </div>
           </div>
         )}
-      </button>
+      </div>
     </div>
   );
 }

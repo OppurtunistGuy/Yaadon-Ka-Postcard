@@ -10,16 +10,15 @@ export interface SentPostcardRecord {
   vibeEmoji: string;
   senderName: string;
   createdAt: number;
+  status?: "Sent" | "Delivered";
+  themeId?: string;
 }
 
 const STORAGE_KEY = "ykpostcard:sent-recent";
-const MAX_RECORDS = 6;
+const MAX_RECORDS = 100;
 const EMPTY: SentPostcardRecord[] = [];
 
-// In-memory cache so getSnapshot returns a stable reference (required by
-// useSyncExternalStore to avoid infinite re-renders).
 let cache: SentPostcardRecord[] | null = null;
-
 const listeners = new Set<() => void>();
 
 function notify() {
@@ -75,7 +74,7 @@ export function useSentPostcards() {
   const addRecord = useCallback((rec: Omit<SentPostcardRecord, "createdAt">) => {
     const current = getSnapshot();
     const next = [
-      { ...rec, createdAt: Date.now() },
+      { ...rec, createdAt: Date.now(), status: "Sent" as const },
       ...current.filter((r) => r.token !== rec.token),
     ];
     write(next);

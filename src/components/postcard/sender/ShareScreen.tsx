@@ -19,10 +19,10 @@ export function ShareScreen() {
 
   const shareUrl =
     typeof window !== "undefined" && generatedToken
-      ? `${window.location.origin}/?card=${generatedToken}`
+      ? `${window.location.origin}/p/${generatedToken}`
       : "";
 
-  const shareText = `Tumhe ek postcard aaya hai! 💌 Khlo yahan: ${shareUrl}`;
+  const shareText = `Tumhe ek postcard aaya hai! 💌 Khol yahan: ${shareUrl}`;
 
   async function handleCopy() {
     try {
@@ -93,7 +93,7 @@ export function ShareScreen() {
                   className="font-serif-vintage text-[10px] uppercase tracking-[0.2em]"
                   style={{ color: "var(--ink-soft)" }}
                 >
-                  Postcard token
+                  Postcard Token
                 </div>
                 <div
                   className="font-mono font-bold text-lg tracking-widest mt-1"

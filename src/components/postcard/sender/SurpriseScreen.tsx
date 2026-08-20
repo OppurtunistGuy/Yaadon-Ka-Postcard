@@ -5,8 +5,10 @@ import { ArrowRight, Star } from "lucide-react";
 import { PaperBackground } from "../shared/PaperBackground";
 import { AirmailDivider } from "../shared/AirmailBorder";
 import { SenderHeader, SenderFooter } from "./SenderChrome";
+import { GifDisplay } from "../shared/GifDisplay";
 import { useSenderStore } from "@/lib/postcard-store";
-import { getSurprisesForVibe, getVibeMeta } from "@/lib/surprises";
+import { getSurprisesForTheme, getVibeMeta } from "@/lib/surprises";
+import { getFestivalTheme } from "@/lib/festival-themes";
 import { cn } from "@/lib/utils";
 
 const TYPE_BADGE: Record<string, { label: string; emoji: string }> = {
@@ -14,12 +16,17 @@ const TYPE_BADGE: Record<string, { label: string; emoji: string }> = {
   dialogue: { label: "Dialogue", emoji: "💬" },
   song: { label: "Song", emoji: "🎵" },
   moment: { label: "Moment", emoji: "🎬" },
+  festival: { label: "Festival", emoji: "✨" },
 };
 
 export function SurpriseScreen() {
   const { draft, updateDraft, setStep } = useSenderStore();
+
+  const currentTheme = getFestivalTheme(draft.themeId);
+  const isFestivalMode = draft.themeId === "rakhi" || draft.themeId === "ganpati";
   const vibeMeta = getVibeMeta(draft.vibe ?? "classic");
-  const surprises = getSurprisesForVibe(draft.vibe ?? "classic");
+
+  const surprises = getSurprisesForTheme(draft.themeId, draft.vibe);
 
   return (
     <PaperBackground className="min-h-screen flex flex-col">
@@ -38,18 +45,20 @@ export function SurpriseScreen() {
             transition={{ duration: 0.4 }}
             className="text-center mb-5"
           >
-            <div className="text-4xl mb-1">{vibeMeta.emoji}</div>
+            <div className="text-4xl mb-1">
+              {isFestivalMode ? currentTheme.icon : vibeMeta.emoji}
+            </div>
             <h2
               className="font-serif-vintage text-2xl sm:text-3xl font-bold"
-              style={{ color: "var(--burgundy)" }}
+              style={{ color: currentTheme.accentColor || "var(--burgundy)" }}
             >
-              {vibeMeta.label} surprises
+              {isFestivalMode ? `${currentTheme.name} Surprises` : `${vibeMeta.label} Surprises`}
             </h2>
             <p
               className="font-handwritten text-sm mt-1"
               style={{ color: "var(--ink-soft)" }}
             >
-              {vibeMeta.description}
+              {isFestivalMode ? currentTheme.description : vibeMeta.description}
             </p>
           </motion.div>
 
@@ -57,6 +66,7 @@ export function SurpriseScreen() {
             {surprises.map((s, idx) => {
               const selected = draft.surpriseId === s.id;
               const badge = TYPE_BADGE[s.type] ?? TYPE_BADGE.dialogue;
+
               return (
                 <motion.button
                   key={s.id}
@@ -72,7 +82,7 @@ export function SurpriseScreen() {
                   )}
                   style={{
                     border: selected
-                      ? `2px solid var(--burgundy)`
+                      ? `2px solid ${currentTheme.accentColor || "var(--burgundy)"}`
                       : `1px solid var(--border)`,
                     backgroundColor: selected ? "#f5e7c0" : "#faf2dc",
                     boxShadow: selected ? "0 6px 16px rgba(90,50,20,0.16)" : undefined,
@@ -96,17 +106,16 @@ export function SurpriseScreen() {
                           className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded"
                           style={{
                             backgroundColor: "rgba(122, 31, 35, 0.1)",
-                            color: "var(--burgundy)",
+                            color: currentTheme.accentColor || "var(--burgundy)",
                           }}
                         >
                           {badge.emoji} {badge.label}
                         </span>
                         {selected && (
                           <span
-                            className="inline-flex items-center gap-1 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded"
+                            className="inline-flex items-center gap-1 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded text-white"
                             style={{
-                              backgroundColor: "var(--burgundy)",
-                              color: "var(--paper)",
+                              backgroundColor: currentTheme.accentColor || "var(--burgundy)",
                             }}
                           >
                             <Star className="w-2.5 h-2.5 fill-current" />
@@ -134,6 +143,9 @@ export function SurpriseScreen() {
                       >
                         &ldquo;{s.quote}&rdquo;
                       </p>
+
+                      {/* Render normalized GIF preview safely */}
+                      <GifDisplay gif={s.gif || s.gifUrl} title={s.title} compact />
                     </div>
                   </div>
                 </motion.button>

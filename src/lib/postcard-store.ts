@@ -2,6 +2,8 @@
 
 import { create } from "zustand";
 import type { Vibe } from "@/lib/surprises";
+import type { FestivalThemeId } from "@/lib/festival-themes";
+import type { MusicPlatform } from "@/lib/security";
 
 export type SenderStep =
   | "intro"
@@ -12,6 +14,7 @@ export type SenderStep =
   | "share";
 
 export interface PostcardDraft {
+  themeId: FestivalThemeId;
   receiverName: string;
   city: string;
   relationship: string;
@@ -19,6 +22,9 @@ export interface PostcardDraft {
   vibe: Vibe | null;
   surpriseId: string | null;
   message: string;
+  musicUrl: string | null;
+  musicPlatform: MusicPlatform | null;
+  musicTitle: string | null;
 }
 
 interface SenderState {
@@ -37,6 +43,7 @@ interface SenderState {
 }
 
 const emptyDraft: PostcardDraft = {
+  themeId: "classic",
   receiverName: "",
   city: "",
   relationship: "",
@@ -44,6 +51,9 @@ const emptyDraft: PostcardDraft = {
   vibe: null,
   surpriseId: null,
   message: "",
+  musicUrl: null,
+  musicPlatform: null,
+  musicTitle: null,
 };
 
 export const useSenderStore = create<SenderState>((set) => ({

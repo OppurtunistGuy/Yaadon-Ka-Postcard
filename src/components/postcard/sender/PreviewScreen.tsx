@@ -23,7 +23,15 @@ export function PreviewScreen() {
   const [revealed, setRevealed] = useState(false);
 
   async function handleGenerate() {
-    if (!surprise || !draft.vibe) return;
+    if (!surprise) {
+      toast({
+        title: "Surprise missing",
+        description: "Please go back and select a surprise.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
     play("stamp");
@@ -32,13 +40,15 @@ export function PreviewScreen() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          themeId: draft.themeId || "classic",
           receiverName: draft.receiverName,
           city: draft.city,
           relationship: draft.relationship,
           senderName: draft.senderName,
-          vibe: draft.vibe,
+          vibe: draft.vibe || draft.themeId || "classic",
           surpriseId: draft.surpriseId,
           message: draft.message,
+          musicUrl: draft.musicUrl,
         }),
       });
       const data = await res.json();
@@ -54,6 +64,7 @@ export function PreviewScreen() {
         vibeLabel: vibeMeta.label,
         vibeEmoji: vibeMeta.emoji,
         senderName: draft.senderName,
+        themeId: draft.themeId,
       });
       play("success");
       setStep("share");
@@ -108,6 +119,7 @@ export function PreviewScreen() {
             {surprise && (
               <PostcardCard
                 data={{
+                  themeId: draft.themeId,
                   receiverName: draft.receiverName,
                   city: draft.city,
                   relationship: draft.relationship,
@@ -116,6 +128,9 @@ export function PreviewScreen() {
                   surprise,
                   vibeLabel: vibeMeta.label,
                   vibeEmoji: vibeMeta.emoji,
+                  musicUrl: draft.musicUrl,
+                  musicPlatform: draft.musicPlatform,
+                  musicTitle: draft.musicTitle,
                 }}
                 revealState={revealed ? "revealed" : "hidden"}
                 onReveal={() => {

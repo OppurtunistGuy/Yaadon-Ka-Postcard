@@ -20,6 +20,10 @@ model Postcard {
   vibe         String
   surpriseId   String
   message      String
+  themeId       String?
+  musicUrl      String?
+  musicPlatform String?
+  musicTitle    String?
   openedAt     DateTime?
   revealedAt   DateTime?
   reaction     String?
@@ -27,3 +31,4 @@ model Postcard {
 
   @@index([token])
 }
+

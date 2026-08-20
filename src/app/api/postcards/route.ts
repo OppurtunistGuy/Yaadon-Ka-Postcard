@@ -1,23 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { SURPRISES, VIBES } from "@/lib/surprises";
-
-function generateToken(): string {
-  // Friendly postcard token: 3 blocks of 4 chars
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  const block = () =>
-    Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
-  return `${block()}-${block()}-${block()}`;
-}
+import { SURPRISES } from "@/lib/surprises";
+import { FESTIVAL_THEMES } from "@/lib/festival-themes";
+import { sanitizeText, parseMusicUrl, generateOpaqueId, checkRateLimit } from "@/lib/security";
 
 function getValidSurpriseIds(): Set<string> {
   return new Set(SURPRISES.map((s) => s.id));
 }
 
+const ALLOWED_VIBES = ["jolly", "romantic", "action", "classic", "rakhi", "ganpati"];
+
 export async function POST(req: NextRequest) {
   try {
+    // Rate limit checking per IP
+    const clientIp = req.headers.get("x-forwarded-for") || "client-ip";
+    if (!checkRateLimit(`create:${clientIp}`, 30, 60000)) {
+      return NextResponse.json(
+        { ok: false, errors: ["Too many requests. Please try again later."] },
+        { status: 429 }
+      );
+    }
+
     const body = await req.json();
     const {
+      themeId,
       receiverName,
       city,
       relationship,
@@ -25,7 +31,13 @@ export async function POST(req: NextRequest) {
       vibe,
       surpriseId,
       message,
+      musicUrl,
     } = body ?? {};
+
+    // Theme validation
+    const validThemeIds = FESTIVAL_THEMES.map((t) => t.id);
+    const cleanThemeId = themeId && validThemeIds.includes(themeId) ? themeId : "classic";
+    const cleanVibe = vibe || (cleanThemeId === "rakhi" ? "rakhi" : cleanThemeId === "ganpati" ? "ganpati" : "classic");
 
     // Validate required fields
     const errors: string[] = [];
@@ -40,44 +52,66 @@ export async function POST(req: NextRequest) {
     if (!message || typeof message !== "string" || message.trim().length < 3)
       errors.push("Message is too short");
 
-    const validVibes = VIBES.map((v) => v.id);
-    if (!vibe || !validVibes.includes(vibe)) errors.push("Pick a vibe");
+    if (!cleanVibe || !ALLOWED_VIBES.includes(cleanVibe)) errors.push("Pick a valid vibe");
 
     const validSurprises = getValidSurpriseIds();
     if (!surpriseId || !validSurprises.has(surpriseId as string))
-      errors.push("Pick a surprise");
+      errors.push("Pick a valid surprise");
 
     if (errors.length > 0) {
       return NextResponse.json({ ok: false, errors }, { status: 400 });
     }
 
-    // Ensure token uniqueness
-    let token = generateToken();
-    let exists = await db.postcard.findUnique({ where: { token } });
-    let attempts = 0;
-    while (exists && attempts < 10) {
-      token = generateToken();
-      exists = await db.postcard.findUnique({ where: { token } });
-      attempts++;
+    // Music validation
+    let cleanMusicUrl: string | null = null;
+    let musicPlatform: string | null = null;
+    let musicTitle: string | null = null;
+
+    if (musicUrl && (cleanVibe === "romantic" || cleanVibe === "action")) {
+      const parsedMusic = parseMusicUrl(musicUrl);
+      if (parsedMusic) {
+        cleanMusicUrl = parsedMusic.url;
+        musicPlatform = parsedMusic.platform;
+        musicTitle = parsedMusic.title;
+      }
     }
 
-    const postcard = await db.postcard.create({
-      data: {
-        token,
-        receiverName: receiverName.trim().slice(0, 60),
-        city: city.trim().slice(0, 60),
-        relationship: relationship.trim().slice(0, 40),
-        senderName: senderName.trim().slice(0, 60),
-        vibe,
-        surpriseId,
-        message: message.trim().slice(0, 1200),
-      },
-    });
+    // Sanitize user text
+    const payloadData = {
+      themeId: cleanThemeId,
+      receiverName: sanitizeText(receiverName).slice(0, 60),
+      city: sanitizeText(city).slice(0, 60),
+      relationship: sanitizeText(relationship).slice(0, 40),
+      senderName: sanitizeText(senderName).slice(0, 60),
+      vibe: cleanVibe,
+      surpriseId,
+      message: sanitizeText(message).slice(0, 1200),
+      musicUrl: cleanMusicUrl,
+      musicPlatform,
+      musicTitle,
+    };
+
+    // Opaque 10-char random token (non-sequential, no internal data)
+    const token = generateOpaqueId(10);
+
+    try {
+      await db.postcard.create({
+        data: {
+          token,
+          ...payloadData,
+        },
+      });
+    } catch (e) {
+      console.error("[POST /api/postcards] Database create error:", e);
+      return NextResponse.json(
+        { ok: false, errors: ["Could not save postcard. Please try again."] },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       ok: true,
-      token: postcard.token,
-      id: postcard.id,
+      token,
     });
   } catch (err) {
     console.error("[POST /api/postcards]", err);

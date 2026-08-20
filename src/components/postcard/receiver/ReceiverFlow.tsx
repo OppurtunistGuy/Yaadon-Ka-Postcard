@@ -9,9 +9,10 @@ import { PaperBackground } from "../shared/PaperBackground";
 import { WaxSeal } from "../shared/Decorations";
 import { AirmailDivider } from "../shared/AirmailBorder";
 import { useSound } from "@/hooks/use-sound";
-import type { Surprise, Vibe } from "@/lib/surprises";
+import { normalizeGif, type Surprise, type Vibe } from "@/lib/surprises";
 
 interface FetchedPostcard {
+  token: string;
   receiverName: string;
   city: string;
   relationship: string;
@@ -21,6 +22,10 @@ interface FetchedPostcard {
   vibeMeta: { label: string; emoji: string };
   surpriseId: string;
   reaction?: string | null;
+  themeId?: string | null;
+  musicUrl?: string | null;
+  musicPlatform?: "youtube" | "spotify" | null;
+  musicTitle?: string | null;
 }
 
 interface FetchedSurprise {
@@ -80,13 +85,11 @@ export function ReceiverFlow({
   function handleOpen() {
     play("open");
     setPhase("opening");
-    // mark opened immediately (fire-and-forget)
     fetch(`/api/postcards/${token}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "open" }),
     }).catch(() => {});
-    // after envelope animation, transition to view
     setTimeout(() => setPhase("view"), 700);
   }
 
@@ -99,7 +102,6 @@ export function ReceiverFlow({
     }).catch(() => {});
   }
 
-  // ----- Loading -----
   if (state === "loading") {
     return (
       <PaperBackground className="min-h-screen flex flex-col items-center justify-center px-4">
@@ -126,7 +128,6 @@ export function ReceiverFlow({
     );
   }
 
-  // ----- Not found / error -----
   if (state === "notfound" || state === "error") {
     return (
       <PaperBackground className="min-h-screen flex flex-col items-center justify-center px-4 py-8">
@@ -174,7 +175,6 @@ export function ReceiverFlow({
     );
   }
 
-  // ----- Splash / opening -----
   if (phase === "splash" || phase === "opening") {
     return (
       <AnimatePresence mode="wait">
@@ -220,7 +220,6 @@ export function ReceiverFlow({
     );
   }
 
-  // ----- Postcard view (after open) -----
   if (!postcard || !surprise) return null;
 
   const surpriseTyped: Surprise = {
@@ -234,6 +233,7 @@ export function ReceiverFlow({
     caption: surprise.caption,
     emoji: surprise.emoji,
     gifUrl: surprise.gifUrl,
+    gif: surprise.gifUrl ? normalizeGif(surprise.gifUrl, surprise.title) : undefined,
     accent: surprise.accent,
   };
 
@@ -245,6 +245,7 @@ export function ReceiverFlow({
     >
       <ReceiverView
         data={{
+          themeId: postcard.themeId,
           receiverName: postcard.receiverName,
           city: postcard.city,
           relationship: postcard.relationship,
@@ -253,6 +254,9 @@ export function ReceiverFlow({
           surprise: surpriseTyped,
           vibeLabel: postcard.vibeMeta.label,
           vibeEmoji: postcard.vibeMeta.emoji,
+          musicUrl: postcard.musicUrl,
+          musicPlatform: postcard.musicPlatform,
+          musicTitle: postcard.musicTitle,
         }}
         token={token}
         initialReaction={postcard.reaction}

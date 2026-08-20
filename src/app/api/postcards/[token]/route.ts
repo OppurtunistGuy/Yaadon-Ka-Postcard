@@ -1,21 +1,66 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getSurpriseById, getVibeMeta } from "@/lib/surprises";
+import { checkRateLimit, sanitizeText } from "@/lib/security";
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ token: string }> }
 ) {
   try {
-    const { token } = await params;
-    if (!token) {
+    const clientIp = req.headers.get("x-forwarded-for") || "client-ip";
+    if (!checkRateLimit(`get:${clientIp}`, 60, 60000)) {
       return NextResponse.json(
-        { ok: false, error: "Missing token" },
+        { ok: false, error: "Too many requests" },
+        { status: 429 }
+      );
+    }
+
+    const { token } = await params;
+    if (!token || typeof token !== "string" || token.length > 500) {
+      return NextResponse.json(
+        { ok: false, error: "Missing or invalid token" },
         { status: 400 }
       );
     }
 
-    const card = await db.postcard.findUnique({ where: { token } });
+    let card: any = null;
+    try {
+      card = await db.postcard.findUnique({ where: { token } });
+    } catch (e) {
+      console.warn("[GET /api/postcards/[token]] DB lookup error:", e);
+    }
+
+    // Legacy fallback for P_ token base64 format (if any legacy cards exist)
+    if (!card && token.startsWith("P_")) {
+      try {
+        const json = Buffer.from(token.slice(2), "base64url").toString("utf-8");
+        const decoded = JSON.parse(json);
+        if (decoded && decoded.receiverName && decoded.surpriseId) {
+          card = {
+            token,
+            themeId: decoded.themeId || "classic",
+            receiverName: decoded.receiverName,
+            city: decoded.city,
+            relationship: decoded.relationship,
+            senderName: decoded.senderName,
+            vibe: decoded.vibe,
+            surpriseId: decoded.surpriseId,
+            message: decoded.message,
+            musicUrl: decoded.musicUrl || null,
+            musicPlatform: decoded.musicPlatform || null,
+            musicTitle: decoded.musicTitle || null,
+            createdAt: new Date(),
+            openedAt: null,
+            revealedAt: null,
+            reaction: null,
+          };
+        }
+      } catch {
+        // ignore
+      }
+    }
+
     if (!card) {
       return NextResponse.json(
         { ok: false, error: "This postcard could not be found. Maybe it got lost in the mail." },
@@ -35,22 +80,23 @@ export async function GET(
       ok: true,
       postcard: {
         token: card.token,
-        receiverName: card.receiverName,
-        city: card.city,
-        relationship: card.relationship,
-        senderName: card.senderName,
+        themeId: card.themeId || "classic",
+        receiverName: sanitizeText(card.receiverName),
+        city: sanitizeText(card.city),
+        relationship: sanitizeText(card.relationship),
+        senderName: sanitizeText(card.senderName),
         vibe: card.vibe,
         vibeMeta: getVibeMeta(card.vibe as "jolly" | "romantic" | "action" | "classic"),
         surpriseId: card.surpriseId,
-        message: card.message,
+        message: sanitizeText(card.message),
+        musicUrl: card.musicUrl || null,
+        musicPlatform: card.musicPlatform || null,
+        musicTitle: card.musicTitle || null,
         createdAt: card.createdAt,
         openedAt: card.openedAt,
         revealedAt: card.revealedAt,
         reaction: card.reaction,
       },
-      // We still hide the full surprise here — the reveal is a separate action
-      // so it can be "locked" client-side until tapped. But for the receiver
-      // we send the surprise too (it's just blurred on the client).
       surprise: {
         id: surprise.id,
         vibe: surprise.vibe,
@@ -62,6 +108,7 @@ export async function GET(
         caption: surprise.caption,
         emoji: surprise.emoji,
         gifUrl: surprise.gifUrl,
+        gif: surprise.gif,
         accent: surprise.accent,
       },
     });
@@ -74,7 +121,6 @@ export async function GET(
   }
 }
 
-// Mark postcard opened / revealed / reacted (lightweight analytics)
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ token: string }> }
@@ -82,24 +128,33 @@ export async function PATCH(
   try {
     const { token } = await params;
     const body = await req.json().catch(() => ({}));
-    const action = body?.action; // "open" | "reveal" | "react"
-    const reaction = typeof body?.reaction === "string" ? body.reaction.slice(0, 16) : null;
+    const action = body?.action;
+    const reaction = typeof body?.reaction === "string" ? sanitizeText(body.reaction).slice(0, 16) : null;
 
-    const card = await db.postcard.findUnique({ where: { token } });
+    let card: any = null;
+    try {
+      card = await db.postcard.findUnique({ where: { token } });
+    } catch {
+      // ignore
+    }
+
     if (!card) {
-      return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+      return NextResponse.json({ ok: true, reaction: reaction || null });
     }
 
     const data: { openedAt?: Date; revealedAt?: Date; reaction?: string | null } = {};
     if (action === "open" && !card.openedAt) data.openedAt = new Date();
     if (action === "reveal" && !card.revealedAt) data.revealedAt = new Date();
     if (action === "react" && reaction !== null) {
-      // allow clearing with empty string, otherwise set
       data.reaction = reaction || null;
     }
 
     if (Object.keys(data).length > 0) {
-      await db.postcard.update({ where: { token }, data });
+      try {
+        await db.postcard.update({ where: { token }, data });
+      } catch {
+        // ignore DB update failure
+      }
     }
 
     return NextResponse.json({ ok: true, reaction: data.reaction ?? card.reaction });
