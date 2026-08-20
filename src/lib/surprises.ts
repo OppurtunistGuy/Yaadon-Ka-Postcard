@@ -1,4 +1,4 @@
-// Curated Bollywood surprises — memes, dialogues, songs & iconic moments
+// Curated Bollywood & Festival surprises — memes, dialogues, songs, icons & Virtual Rakhis
 // Organised by vibe & festival theme. Each surprise is a hidden "gift" inside a postcard.
 
 export type Vibe = "jolly" | "romantic" | "action" | "classic" | "rakhi" | "ganpati";
@@ -32,6 +32,8 @@ export interface Surprise {
   songArtist?: string;
   musicUrl?: string;
   musicPlatform?: "youtube" | "spotify";
+  rakhiId?: string;
+  ganpatiImgId?: string;
 }
 
 export interface VibeMeta {
@@ -117,110 +119,104 @@ export function normalizeGif(
 
 // Authoritative Surprises Master List — includes Celebrity Character options & Festive Options
 export const SURPRISES_RAW: Surprise[] = [
-  // ============ 🪡 RAKHI FESTIVAL SURPRISES ============
+  // ============ 🪡 RAKHI FESTIVAL SURPRISES & VIRTUAL RAKHIS ============
   {
     id: "rakhi-dhaaga",
     vibe: "rakhi",
     type: "festival",
-    title: "Pyar Ka Dhaaga",
-    character: "Raksha Bandhan Special",
+    title: "Golden Om Virtual Rakhi",
+    character: "Virtual Rakhi Thread 🕉️",
     quote: "Phoolon ka taron ka sabka kehna hai, ek hazaron mein meri behen/bhai hai!",
-    caption: "Resham ka dhaaga, umr bhar ka vaada.",
+    caption: "Shubh Om emblem with golden zardosi thread tied on your postcard.",
     emoji: "🪡",
     accent: "#b91c1c",
-    gif: createAuthoritativeGif(
-      "rakhi-dhaaga-gif",
-      "Pyar Ka Dhaaga",
-      "Raksha Bandhan Special",
-      "https://media1.tenor.com/m/fS06Z3YA9AUAAAAC/best.gif"
-    ),
+    rakhiId: "rakhi-gold-om",
   },
   {
-    id: "rakhi-gift-de",
+    id: "rakhi-mor-pankh-surprise",
     vibe: "rakhi",
     type: "festival",
-    title: "Mera Gift Kahan Hai?",
-    character: "Rakhi Special",
+    title: "Mor Pankh Virtual Rakhi",
+    character: "Virtual Rakhi Thread 🦚",
+    quote: "Jitna bhi lado, musibat mein sabse pehle bhai/behen hi khada hota hai.",
+    caption: "Royal peacock feather emblem with shimmering turquoise silk tassels.",
+    emoji: "🦚",
+    accent: "#0284c7",
+    rakhiId: "rakhi-mor-pankh",
+  },
+  {
+    id: "rakhi-swastik-surprise",
+    vibe: "rakhi",
+    type: "festival",
+    title: "Resham Swastik Virtual Rakhi",
+    character: "Virtual Rakhi Thread 🌸",
     quote: "Pehle mera gift nikal... uske baad hi aarti utarungii!",
-    caption: "No gift, no Rakhi logic!",
-    emoji: "🎁",
-    accent: "#d97706",
-    gif: createAuthoritativeGif(
-      "rakhi-gift-gif",
-      "Mera Gift Kahan Hai?",
-      "Rakhi Special",
-      "https://media1.tenor.com/m/9B5-Q7H-DOIAAAAC/ayee-link-dena.gif"
-    ),
+    caption: "Auspicious red & yellow mauli thread with crimson zardosi flower.",
+    emoji: "🌸",
+    accent: "#991b1b",
+    rakhiId: "rakhi-swastik-red",
   },
   {
-    id: "rakhi-bhai-love",
+    id: "rakhi-rudraksha-surprise",
     vibe: "rakhi",
     type: "festival",
-    title: "Bhai Ho Toh Aisa",
-    character: "Rakhi Special",
-    quote: "Jitna bhi lado, musibat mein sabse pehle bhai hi khada hota hai.",
-    caption: "Humesha saath nibhane ka vaada.",
-    emoji: "💖",
-    accent: "#991b1b",
-    gif: createAuthoritativeGif(
-      "rakhi-bhai-gif",
-      "Bhai Ho Toh Aisa",
-      "Rakhi Special",
-      "https://media1.tenor.com/m/ClSbgu9gcccAAAAC/holding-hands-namaste.gif"
-    ),
+    title: "Rudraksha Royal Virtual Rakhi",
+    character: "Virtual Rakhi Thread 📿",
+    quote: "Humesha ek dusre ki raksha karne ka vaada.",
+    caption: "Sacred Rudraksha bead with protective saffron silk threads.",
+    emoji: "📿",
+    accent: "#78350f",
+    rakhiId: "rakhi-rudraksha-royal",
   },
 
-  // ============ 🐘 GANPATI FESTIVAL SURPRISES ============
+  // ============ 🐘 GANPATI FESTIVAL SURPRISES & BAPPA PORTRAITS ============
   {
-    id: "ganpati-bappa-morya",
+    id: "ganpati-lalbaugcha-raja",
     vibe: "ganpati",
     type: "festival",
-    title: "Ganpati Bappa Morya",
-    character: "Ganesh Utsav Special",
+    title: "Lalbaugcha Raja Portrait",
+    character: "Ganesh Utsav Special 👑",
     quote: "Ganpati Bappa Morya! Mangal Murti Morya!",
-    caption: "Bappa aaye hain sabki dukh door karne.",
-    emoji: "🐘",
-    accent: "#9a3412",
-    gif: createAuthoritativeGif(
-      "ganpati-bappa-gif",
-      "Ganpati Bappa Morya",
-      "Ganesh Utsav Special",
-      "https://media1.tenor.com/m/Go5_iSEZE94AAAAC/oh-yes-handsome.gif"
-    ),
+    caption: "Lalbaugcha Raja - Navsacha Ganpati blessing your postcard.",
+    emoji: "👑",
+    accent: "#b91c1c",
+    ganpatiImgId: "ganpati-lalbaugcha-raja",
   },
   {
-    id: "ganpati-modak",
+    id: "ganpati-dagdusheth",
     vibe: "ganpati",
     type: "festival",
-    title: "Ukdiche Modak",
-    character: "Ganesh Utsav Special",
-    quote: "Bappa ke favourite Modak... aur aapke liye dher saara prem!",
-    caption: "Mithaas aur aashirwaad saath mein.",
-    emoji: "🥟",
-    accent: "#c2410c",
-    gif: createAuthoritativeGif(
-      "ganpati-modak-gif",
-      "Ukdiche Modak",
-      "Ganesh Utsav Special",
-      "https://media1.tenor.com/m/KGr0nFnSjHoAAAAC/ranbir-kapoor-excited.gif"
-    ),
-  },
-  {
-    id: "ganpati-aarti",
-    vibe: "ganpati",
-    type: "festival",
-    title: "Aarti & Blessings",
-    character: "Ganesh Utsav Special",
+    title: "Dagdusheth Halwai Bappa",
+    character: "Ganesh Utsav Special 🕉️",
     quote: "Sukh Karta Dukh Harta Varta Vighnachi... Bappa har vighna door karein!",
-    caption: "Aarti ki stuti, ghar mein sukh samriddhi.",
+    caption: "Shrimant Dagdusheth Halwai Ganpati with golden aura & blessings.",
+    emoji: "🕉️",
+    accent: "#d97706",
+    ganpatiImgId: "ganpati-dagdusheth",
+  },
+  {
+    id: "ganpati-modak-priya",
+    vibe: "ganpati",
+    type: "festival",
+    title: "Ukdiche Modak Bal Ganesha",
+    character: "Ganesh Utsav Special 🥟",
+    quote: "Bappa ke favourite Modak... aur aapke liye dher saara prem!",
+    caption: "Sweet modak bhog & joyous festive spirit for your loved ones.",
+    emoji: "🥟",
+    accent: "#ea580c",
+    ganpatiImgId: "ganpati-modak-priya",
+  },
+  {
+    id: "ganpati-vighnaharta-gold",
+    vibe: "ganpati",
+    type: "festival",
+    title: "Golden Vighnaharta Blessing",
+    character: "Ganesh Utsav Special 🪔",
+    quote: "Vighnaharta Bappa sabka kalyan karein aur sukh samriddhi de!",
+    caption: "Golden Ganpati Bappa portrait with marigold garland frame.",
     emoji: "🪔",
     accent: "#b45309",
-    gif: createAuthoritativeGif(
-      "ganpati-aarti-gif",
-      "Aarti & Blessings",
-      "Ganesh Utsav Special",
-      "https://media1.tenor.com/m/ClSbgu9gcccAAAAC/holding-hands-namaste.gif"
-    ),
+    ganpatiImgId: "ganpati-vighnaharta-gold",
   },
 
   // ============ 😂 JOLLY — Johnny Lever, Akshay Kumar, Javed Jaffrey ============
