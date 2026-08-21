@@ -91,22 +91,23 @@ export async function createPostcard(payload: PostcardPayload): Promise<{ token:
 
   let savedToDb = false;
   try {
-    await db.postcard.create({
-      data: {
-        token: opaqueToken,
-        themeId: payload.themeId || "classic",
-        receiverName: payload.receiverName,
-        city: payload.city,
-        relationship: payload.relationship,
-        senderName: payload.senderName,
-        senderGender: payload.senderGender || "male",
-        vibe: payload.vibe,
-        surpriseId: payload.surpriseId,
-        message: payload.message,
-        musicUrl: payload.musicUrl || null,
-        musicPlatform: payload.musicPlatform || null,
-        musicTitle: payload.musicTitle || null,
-      },
+    const dataToInsert: any = {
+      token: opaqueToken,
+      themeId: payload.themeId || "classic",
+      receiverName: payload.receiverName,
+      city: payload.city,
+      relationship: payload.relationship,
+      senderName: payload.senderName,
+      senderGender: payload.senderGender || "male",
+      vibe: payload.vibe,
+      surpriseId: payload.surpriseId,
+      message: payload.message,
+      musicUrl: payload.musicUrl || null,
+      musicPlatform: payload.musicPlatform || null,
+      musicTitle: payload.musicTitle || null,
+    };
+    await (db.postcard as any).create({
+      data: dataToInsert,
     });
     savedToDb = true;
   } catch (e) {
