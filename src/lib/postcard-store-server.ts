@@ -131,7 +131,7 @@ export async function fetchPostcardByToken(token: string): Promise<PostcardPaylo
 
   // 2. Check DB
   try {
-    const cardFromDb = await db.postcard.findUnique({ where: { token } });
+    const cardFromDb: any = await db.postcard.findUnique({ where: { token } });
     if (cardFromDb) {
       const result: PostcardPayload = {
         token: cardFromDb.token,
