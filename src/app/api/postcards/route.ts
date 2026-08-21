@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { SURPRISES } from "@/lib/surprises";
 import { FESTIVAL_THEMES } from "@/lib/festival-themes";
 import { sanitizeText, parseMusicUrl, generateOpaqueId, checkRateLimit } from "@/lib/security";
+import { createPostcard } from "@/lib/postcard-store-server";
 
 function getValidSurpriseIds(): Set<string> {
   return new Set(SURPRISES.map((s) => s.id));
@@ -92,23 +93,7 @@ export async function POST(req: NextRequest) {
       musicTitle,
     };
 
-    // Opaque 10-char random token (non-sequential, no internal data)
-    const token = generateOpaqueId(10);
-
-    try {
-      await db.postcard.create({
-        data: {
-          token,
-          ...payloadData,
-        },
-      });
-    } catch (e) {
-      console.error("[POST /api/postcards] Database create error:", e);
-      return NextResponse.json(
-        { ok: false, errors: ["Could not save postcard. Please try again."] },
-        { status: 500 }
-      );
-    }
+    const { token } = await createPostcard(payloadData);
 
     return NextResponse.json({
       ok: true,

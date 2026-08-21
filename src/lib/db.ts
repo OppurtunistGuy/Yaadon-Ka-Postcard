@@ -7,9 +7,16 @@ function getDatabaseUrl() {
     const tmpDbPath = '/tmp/custom.db'
     if (!fs.existsSync(tmpDbPath)) {
       try {
-        const seedDbPath = path.join(process.cwd(), 'db', 'custom.db')
-        if (fs.existsSync(seedDbPath)) {
-          fs.copyFileSync(seedDbPath, tmpDbPath)
+        const possibleSeedPaths = [
+          path.join(process.cwd(), 'db', 'custom.db'),
+          path.join(process.cwd(), 'prisma', 'db', 'custom.db'),
+          path.join(process.cwd(), 'prisma', 'dev.db'),
+        ]
+        for (const seedPath of possibleSeedPaths) {
+          if (fs.existsSync(seedPath)) {
+            fs.copyFileSync(seedPath, tmpDbPath)
+            break
+          }
         }
       } catch (e) {
         console.error('Failed to copy seed db to /tmp:', e)
@@ -22,6 +29,7 @@ function getDatabaseUrl() {
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
+  initialized: boolean | undefined
 }
 
 export const db =
@@ -32,7 +40,40 @@ export const db =
         url: getDatabaseUrl(),
       },
     },
-    log: ['query'],
+    log: process.env.NODE_ENV === 'development' ? ['query'] : [],
   })
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = db
+
+// Ensure tables exist asynchronously
+if (!globalForPrisma.initialized) {
+  globalForPrisma.initialized = true
+  db.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "Postcard" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "token" TEXT NOT NULL,
+      "receiverName" TEXT NOT NULL,
+      "city" TEXT NOT NULL,
+      "relationship" TEXT NOT NULL,
+      "senderName" TEXT NOT NULL,
+      "senderGender" TEXT DEFAULT 'male',
+      "vibe" TEXT NOT NULL,
+      "surpriseId" TEXT NOT NULL,
+      "message" TEXT NOT NULL,
+      "themeId" TEXT,
+      "musicUrl" TEXT,
+      "musicPlatform" TEXT,
+      "musicTitle" TEXT,
+      "openedAt" DATETIME,
+      "revealedAt" DATETIME,
+      "reaction" TEXT,
+      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `).then(() => {
+    return db.$executeRawUnsafe(`
+      CREATE UNIQUE INDEX IF NOT EXISTS "Postcard_token_key" ON "Postcard"("token");
+    `)
+  }).catch((e) => {
+    console.warn("DB init table check warning:", e)
+  })
+}

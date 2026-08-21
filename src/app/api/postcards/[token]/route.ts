@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getSurpriseById, getVibeMeta } from "@/lib/surprises";
 import { checkRateLimit, sanitizeText } from "@/lib/security";
+import { fetchPostcardByToken } from "@/lib/postcard-store-server";
 
 export async function GET(
   req: NextRequest,
@@ -24,42 +25,7 @@ export async function GET(
       );
     }
 
-    let card: any = null;
-    try {
-      card = await db.postcard.findUnique({ where: { token } });
-    } catch (e) {
-      console.warn("[GET /api/postcards/[token]] DB lookup error:", e);
-    }
-
-    // Legacy fallback for P_ token base64 format (if any legacy cards exist)
-    if (!card && token.startsWith("P_")) {
-      try {
-        const json = Buffer.from(token.slice(2), "base64url").toString("utf-8");
-        const decoded = JSON.parse(json);
-        if (decoded && decoded.receiverName && decoded.surpriseId) {
-          card = {
-            token,
-            themeId: decoded.themeId || "classic",
-            receiverName: decoded.receiverName,
-            city: decoded.city,
-            relationship: decoded.relationship,
-            senderName: decoded.senderName,
-            vibe: decoded.vibe,
-            surpriseId: decoded.surpriseId,
-            message: decoded.message,
-            musicUrl: decoded.musicUrl || null,
-            musicPlatform: decoded.musicPlatform || null,
-            musicTitle: decoded.musicTitle || null,
-            createdAt: new Date(),
-            openedAt: null,
-            revealedAt: null,
-            reaction: null,
-          };
-        }
-      } catch {
-        // ignore
-      }
-    }
+    const card = await fetchPostcardByToken(token);
 
     if (!card) {
       return NextResponse.json(
