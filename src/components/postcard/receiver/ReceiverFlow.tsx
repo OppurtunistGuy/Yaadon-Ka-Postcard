@@ -17,6 +17,7 @@ interface FetchedPostcard {
   city: string;
   relationship: string;
   senderName: string;
+  senderGender?: "male" | "female" | null;
   message: string;
   vibe: string;
   vibeMeta: { label: string; emoji: string };
@@ -40,6 +41,8 @@ interface FetchedSurprise {
   emoji: string;
   gifUrl?: string;
   accent: string;
+  rakhiId?: string;
+  ganpatiImgId?: string;
 }
 
 type LoadState = "loading" | "ready" | "notfound" | "error";
@@ -50,8 +53,14 @@ export function ReceiverFlow({
   onGoHome,
 }: {
   token: string;
-  onGoHome: () => void;
+  onGoHome?: () => void;
 }) {
+  const handleGoHome = onGoHome ?? (() => {
+    if (typeof window !== "undefined") {
+      window.location.href = "/";
+    }
+  });
+
   const [state, setState] = useState<LoadState>("loading");
   const [phase, setPhase] = useState<Phase>("splash");
   const [postcard, setPostcard] = useState<FetchedPostcard | null>(null);
@@ -163,7 +172,7 @@ export function ReceiverFlow({
               Try again
             </button>
             <button
-              onClick={onGoHome}
+              onClick={handleGoHome}
               className="btn-vintage text-sm font-semibold px-4 py-2 rounded inline-flex items-center justify-center gap-1.5"
             >
               <Mail className="w-4 h-4" />
@@ -186,6 +195,7 @@ export function ReceiverFlow({
             <ReceiverSplash
               senderName={postcard?.senderName}
               city={postcard?.city}
+              themeId={postcard?.themeId}
               onOpen={handleOpen}
             />
           </motion.div>
@@ -235,6 +245,8 @@ export function ReceiverFlow({
     gifUrl: surprise.gifUrl,
     gif: surprise.gifUrl ? normalizeGif(surprise.gifUrl, surprise.title) : undefined,
     accent: surprise.accent,
+    rakhiId: surprise.rakhiId,
+    ganpatiImgId: surprise.ganpatiImgId,
   };
 
   return (
@@ -250,6 +262,7 @@ export function ReceiverFlow({
           city: postcard.city,
           relationship: postcard.relationship,
           senderName: postcard.senderName,
+          senderGender: postcard.senderGender,
           message: postcard.message,
           surprise: surpriseTyped,
           vibeLabel: postcard.vibeMeta.label,
@@ -261,7 +274,7 @@ export function ReceiverFlow({
         token={token}
         initialReaction={postcard.reaction}
         onReveal={handleReveal}
-        onGoHome={onGoHome}
+        onGoHome={handleGoHome}
       />
     </motion.div>
   );

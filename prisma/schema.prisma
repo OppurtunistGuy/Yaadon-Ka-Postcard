@@ -17,6 +17,7 @@ model Postcard {
   city         String
   relationship String
   senderName   String
+  senderGender String?  @default("male")
   vibe         String
   surpriseId   String
   message      String

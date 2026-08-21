@@ -14,6 +14,14 @@ export interface FestivalTheme {
   waxSealEmoji: string;
   cornerDecorationEmoji: string;
   description: string;
+
+  // Receiver-specific configuration
+  arrivalHeading: string;
+  arrivalSubheading: string;
+  arrivalEmoji: string;
+  arrivalFooterText: string;
+  openButtonText: string;
+  surpriseHeaderLabel: string;
 }
 
 export const FESTIVAL_THEMES: FestivalTheme[] = [
@@ -31,6 +39,12 @@ export const FESTIVAL_THEMES: FestivalTheme[] = [
     waxSealEmoji: "✉",
     cornerDecorationEmoji: "✦",
     description: "Traditional Indian postal style with aged paper and classic airmail borders.",
+    arrivalHeading: "A postcard has arrived.",
+    arrivalSubheading: "A little memory from someone you cherish.",
+    arrivalEmoji: "✉️",
+    arrivalFooterText: "Posted with love ♡",
+    openButtonText: "Open Postcard",
+    surpriseHeaderLabel: "✨ Revealed Surprise",
   },
   {
     id: "rakhi",
@@ -46,6 +60,12 @@ export const FESTIVAL_THEMES: FestivalTheme[] = [
     waxSealEmoji: "🌺",
     cornerDecorationEmoji: "🏵️",
     description: "Festive Rakhi theme with marigold hues, silk thread motifs, and warm brother-sister nostalgia.",
+    arrivalHeading: "A postcard has arrived.",
+    arrivalSubheading: "A special Raksha Bandhan memory for you.",
+    arrivalEmoji: "🪡",
+    arrivalFooterText: "Rakhi Pyar ka Dhaaga ♡",
+    openButtonText: "Open Postcard",
+    surpriseHeaderLabel: "🪡 Virtual Rakhi Attached",
   },
   {
     id: "ganpati",
@@ -61,6 +81,12 @@ export const FESTIVAL_THEMES: FestivalTheme[] = [
     waxSealEmoji: "🕉️",
     cornerDecorationEmoji: "🪔",
     description: "Divine Ganesh Utsav theme with Modak accents, brass lamp flourishes, and saffron warmth.",
+    arrivalHeading: "A postcard has arrived.",
+    arrivalSubheading: "A little blessing from someone.",
+    arrivalEmoji: "🪔",
+    arrivalFooterText: "Ganpati Bappa Morya ♡",
+    openButtonText: "Open Postcard",
+    surpriseHeaderLabel: "🕉️ A little something from Bappa",
   },
 ];
 

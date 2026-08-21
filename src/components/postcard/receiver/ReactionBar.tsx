@@ -5,12 +5,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useSound } from "@/hooks/use-sound";
 
 const REACTIONS = [
-  { emoji: "😂", label: "Hansi" },
-  { emoji: "❤️", label: "Pyaar" },
-  { emoji: "🥺", label: "Rula diya" },
-  { emoji: "🔥", label: "Aag" },
-  { emoji: "👏", label: "Wah!" },
-  { emoji: "🤗", label: "Jadoo ki jappi" },
+  { emoji: "😂", label: "Hansi", phrase: "Hansi waala reaction sender tak pahunch gaya! ✨" },
+  { emoji: "❤️", label: "Pyaar", phrase: "Dil se pyaara reaction sender tak pahunch gaya! ❤️" },
+  { emoji: "🥺", label: "Emotional", phrase: "Yeh meetha reaction sender tak pahunch gaya! 🥹" },
+  { emoji: "🔥", label: "Aag", phrase: "Kadak reaction sender tak pahunch gaya! 🔥" },
+  { emoji: "👏", label: "Wah!", phrase: "Kamaal ka reaction sender tak pahunch gaya! 👏" },
+  { emoji: "🤗", label: "Jadoo ki jappi", phrase: "Warm jadoo ki jappi sender tak pahunch gayi! 🤗" },
 ];
 
 /**
@@ -115,7 +115,7 @@ export function ReactionBar({
             className="font-handwritten text-xs text-center mt-2"
             style={{ color: "var(--ink-soft)" }}
           >
-            {REACTIONS.find((r) => r.emoji === selected)?.label} bhej diya ✓
+            {REACTIONS.find((r) => r.emoji === selected)?.phrase}
           </motion.p>
         )}
       </AnimatePresence>

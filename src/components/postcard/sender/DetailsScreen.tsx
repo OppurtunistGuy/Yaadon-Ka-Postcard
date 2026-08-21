@@ -159,14 +159,58 @@ export function DetailsScreen() {
                 onChange={(v) => updateDraft({ relationship: v })}
                 maxLength={40}
               />
-              <Field
-                label="Your Name"
-                emoji="✍️"
-                placeholder="e.g. Priya"
-                value={draft.senderName}
-                onChange={(v) => updateDraft({ senderName: v })}
-                maxLength={60}
-              />
+              <div>
+                <span
+                  className="font-serif-vintage text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 mb-1.5"
+                  style={{ color: "var(--burgundy)" }}
+                >
+                  <span>✍️</span> Your Name & Sign-off
+                </span>
+                <input
+                  type="text"
+                  value={draft.senderName}
+                  onChange={(e) => updateDraft({ senderName: e.target.value })}
+                  placeholder="e.g. Rahul / Priya"
+                  maxLength={60}
+                  className="field-vintage w-full font-handwritten text-base px-3 py-2 rounded-md outline-none mb-2"
+                  style={{
+                    backgroundColor: "rgba(255, 250, 235, 0.7)",
+                    border: "1px solid var(--border)",
+                    color: "var(--ink)",
+                  }}
+                />
+                {draft.themeId === "rakhi" && (
+                  <div className="flex items-center gap-2">
+                    <span className="font-handwritten text-xs" style={{ color: "var(--ink-soft)" }}>
+                      Sign-off:
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => updateDraft({ senderGender: "male" })}
+                      className={cn(
+                        "px-2.5 py-1 rounded text-xs font-serif-vintage transition border",
+                        (draft.senderGender || "male") === "male"
+                          ? "bg-amber-800 text-amber-50 border-amber-900 shadow-sm font-bold"
+                          : "bg-amber-50 text-amber-900 border-amber-900/20 opacity-75 hover:opacity-100"
+                      )}
+                    >
+                      Tera, (He / Male)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => updateDraft({ senderGender: "female" })}
+                      className={cn(
+                        "px-2.5 py-1 rounded text-xs font-serif-vintage transition border",
+                        draft.senderGender === "female"
+                          ? "bg-amber-800 text-amber-50 border-amber-900 shadow-sm font-bold"
+                          : "bg-amber-50 text-amber-900 border-amber-900/20 opacity-75 hover:opacity-100"
+                      )}
+                    >
+                      Teri, (She / Female)
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Vibe selector — Only shown when in Classic / No Festival mode */}
@@ -260,13 +304,16 @@ export function DetailsScreen() {
 
             <button
               disabled={!canContinue}
-              onClick={() => canContinue && setStep("surprise")}
+              onClick={() => {
+                if (!canContinue) return;
+                setStep("surprise");
+              }}
               className={cn(
                 "btn-vintage font-serif-vintage font-semibold px-6 py-2.5 rounded-md tracking-wide flex items-center gap-2 h-11",
                 !canContinue && "opacity-50 cursor-not-allowed grayscale"
               )}
             >
-              Choose a Surprise
+              Choose Theme & Surprise
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>

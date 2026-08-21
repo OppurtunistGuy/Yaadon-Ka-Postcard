@@ -1,75 +1,66 @@
 "use client";
 
-import { useState } from "react";
 import { motion } from "framer-motion";
-import { Clock, Trash2, ExternalLink, Mail, ChevronDown } from "lucide-react";
-import { AirmailDivider } from "../shared/AirmailBorder";
+import { Mail, Clock, Trash2, ArrowRight } from "lucide-react";
 import type { SentPostcardRecord } from "@/hooks/use-sent-postcards";
+import Link from "next/link";
 
-const PAGE_SIZE = 5;
+const HOMEPAGE_LIMIT = 5;
 
 export function SentPostcardsList({
   records,
   onOpen,
   onDelete,
   onClear,
+  showAll = false,
 }: {
   records: SentPostcardRecord[];
   onOpen: (token: string) => void;
   onDelete: (token: string) => void;
   onClear: () => void;
+  showAll?: boolean;
 }) {
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-
   if (records.length === 0) return null;
 
-  const visibleRecords = records.slice(0, visibleCount);
-  const hasMore = visibleCount < records.length;
+  const displayRecords = showAll ? records : records.slice(0, HOMEPAGE_LIMIT);
+  const hasMore = !showAll && records.length > HOMEPAGE_LIMIT;
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.3, duration: 0.5 }}
-      className="max-w-2xl mx-auto mt-10"
+      transition={{ delay: 0.2, duration: 0.4 }}
+      className="w-full max-w-2xl mx-auto mt-12 mb-6"
     >
       {/* Header */}
-      <div className="flex items-center justify-between mb-3 px-1">
+      <div className="flex items-baseline justify-between mb-3 px-1 border-b pb-2" style={{ borderColor: "var(--border)" }}>
         <div className="flex items-center gap-2">
           <Clock className="w-4 h-4" style={{ color: "var(--burgundy)" }} />
           <h3
-            className="font-serif-vintage text-base font-bold"
+            className="font-serif-vintage text-base sm:text-lg font-bold tracking-tight"
             style={{ color: "var(--burgundy)" }}
           >
             Postcards you&apos;ve sent
           </h3>
           <span
-            className="text-xs px-2 py-0.5 rounded-full font-mono font-semibold"
-            style={{ backgroundColor: "rgba(122,31,35,0.1)", color: "var(--burgundy)" }}
+            className="text-[11px] px-1.5 py-0.5 rounded font-mono font-medium"
+            style={{ backgroundColor: "rgba(122,31,35,0.08)", color: "var(--burgundy)" }}
           >
             {records.length}
           </span>
         </div>
         <button
           onClick={onClear}
-          className="text-[10px] uppercase tracking-wider hover:opacity-70 transition font-serif-vintage"
+          className="text-[11px] font-serif-vintage tracking-wider hover:opacity-75 transition"
           style={{ color: "var(--ink-soft)" }}
         >
           Clear all
         </button>
       </div>
 
-      <AirmailDivider className="mb-3" />
-
-      {/* Compact Scrollable Area */}
-      <div
-        className="space-y-2 max-h-80 overflow-y-auto pr-1 rounded-md"
-        style={{
-          scrollbarWidth: "thin",
-          scrollbarColor: "var(--burgundy) transparent",
-        }}
-      >
-        {visibleRecords.map((r, idx) => {
+      {/* Slip List */}
+      <div className="divide-y rounded-md overflow-hidden bg-[#faf3e0]/80 border shadow-xs" style={{ borderColor: "var(--border)" }}>
+        {displayRecords.map((r, idx) => {
           const dateStr = new Date(r.createdAt).toLocaleDateString("en-IN", {
             day: "numeric",
             month: "short",
@@ -78,107 +69,76 @@ export function SentPostcardsList({
           return (
             <motion.div
               key={r.token}
-              initial={{ opacity: 0, x: -10 }}
+              initial={{ opacity: 0, x: -8 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: idx * 0.03 }}
-              className="paper-grain rounded-md p-2.5 flex items-center justify-between gap-3 vignette group hover:shadow-sm transition-all"
-              style={{
-                border: "1px solid var(--border)",
-                backgroundColor: "#faf2dc",
-              }}
+              className="p-3 sm:px-4 flex items-center justify-between gap-3 hover:bg-black/[0.02] transition group"
             >
-              {/* Mini stamp badge */}
-              <div
-                className="w-9 h-9 rounded-sm flex items-center justify-center shrink-0 shadow-inner"
-                style={{
-                  backgroundColor: "var(--burgundy)",
-                  color: "#f7eed8",
-                  border: "1px solid #5a1518",
-                }}
-              >
-                <span className="text-sm">{r.vibeEmoji || "💌"}</span>
+              {/* Emoji Badge Box — Matching Screenshot */}
+              <div className="w-10 h-10 rounded-xl bg-amber-900/10 border border-amber-900/20 flex items-center justify-center text-2xl shrink-0 select-none shadow-2xs">
+                {r.vibeEmoji || "💌"}
               </div>
 
-              {/* Information text */}
+              {/* Middle content: Recipient + Vibe Details */}
               <div className="min-w-0 flex-1">
-                <div className="flex items-baseline gap-1.5 flex-wrap">
-                  <span
-                    className="font-serif-vintage font-bold text-xs sm:text-sm truncate"
-                    style={{ color: "var(--ink)" }}
-                  >
+                <div className="flex items-baseline gap-1.5 truncate">
+                  <span className="font-serif-vintage font-bold text-sm text-[var(--ink)]">
                     To: {r.receiverName}
                   </span>
-                  <span
-                    className="text-[10px] italic truncate"
-                    style={{ color: "var(--ink-soft)" }}
-                  >
+                  <span className="text-xs text-[var(--ink-soft)] opacity-80">
                     · {r.city}
                   </span>
                 </div>
-                <div className="flex items-center gap-2 flex-wrap text-[11px]">
-                  <span
-                    className="font-handwritten text-xs truncate"
-                    style={{ color: "var(--ink-soft)" }}
-                  >
-                    {r.vibeLabel} · from {r.senderName}
-                  </span>
-                  <span
-                    className="text-[9px] font-mono opacity-60"
-                    style={{ color: "var(--ink-soft)" }}
-                  >
-                    · {dateStr}
-                  </span>
+                <div className="font-handwritten text-xs text-[var(--ink-soft)] flex items-center gap-1.5 mt-0.5">
+                  <span className="font-semibold text-amber-950">{r.vibeLabel}</span>
+                  <span>· from {r.senderName}</span>
                 </div>
               </div>
 
-              {/* View / Delete actions */}
-              <div className="flex items-center gap-2 shrink-0">
+              {/* Right Side: Date + External Link + Trash */}
+              <div className="flex items-center gap-3 shrink-0 text-right">
+                <span className="text-xs font-mono text-[var(--ink-soft)] opacity-70 hidden sm:inline">
+                  {dateStr}
+                </span>
                 <button
                   onClick={() => onOpen(r.token)}
-                  className="inline-flex items-center gap-1 text-xs font-serif-vintage font-semibold px-2 py-1 rounded hover:bg-black/5 transition"
-                  style={{ color: "var(--postal-blue)" }}
+                  aria-label="Open postcard"
+                  className="p-1.5 rounded hover:bg-black/5 transition text-[var(--burgundy)]"
                 >
-                  <ExternalLink className="w-3 h-3" />
-                  View
+                  <Mail className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => onDelete(r.token)}
-                  aria-label="Delete postcard record"
-                  className="inline-flex items-center gap-1 text-xs font-serif-vintage px-2 py-1 rounded hover:bg-black/5 transition opacity-60 hover:opacity-100"
-                  style={{ color: "var(--ink-soft)" }}
+                  aria-label="Delete record"
+                  className="opacity-50 hover:opacity-100 p-1.5 transition text-[var(--ink-soft)] hover:text-red-700"
                 >
-                  <Trash2 className="w-3 h-3" />
-                  Delete
+                  <Trash2 className="w-4 h-4" />
                 </button>
               </div>
             </motion.div>
           );
         })}
+        {/* Footer info bar inside box — Matching Image 2 */}
+        <div className="px-4 py-2.5 bg-amber-900/5 text-center border-t text-[11px] font-serif-vintage text-[var(--ink-soft)] opacity-90 flex items-center justify-center gap-1.5" style={{ borderColor: "var(--border)" }}>
+          <span>📅 Saved on this device only</span>
+          <span>&bull;</span>
+          <span>{records.length} postcard{records.length === 1 ? "" : "s"}</span>
+        </div>
       </div>
 
-      {/* Load More Pagination Button */}
+      {/* View All Link (Scalability for 10, 20, 50, 100 postcards) */}
       {hasMore && (
         <div className="mt-3 text-center">
-          <button
-            onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
-            className="btn-pastel inline-flex items-center gap-1.5 text-xs font-serif-vintage font-semibold px-4 py-1.5 rounded-full shadow-sm hover:shadow transition"
+          <Link
+            href="/postcards"
+            className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-serif-vintage font-semibold py-1 px-3 rounded hover:underline transition"
+            style={{ color: "var(--burgundy)" }}
           >
-            <ChevronDown className="w-3.5 h-3.5" />
-            Load more ({records.length - visibleCount} remaining)
-          </button>
+            <span>View all postcards ({records.length})</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
         </div>
       )}
-
-      {/* Footer hint */}
-      <div className="mt-3 flex items-center justify-center gap-1.5">
-        <Mail className="w-3 h-3" style={{ color: "var(--ink-soft)" }} />
-        <span
-          className="font-handwritten text-[11px]"
-          style={{ color: "var(--ink-soft)" }}
-        >
-          Saved on this device · Showing {visibleRecords.length} of {records.length}
-        </span>
-      </div>
     </motion.div>
   );
 }

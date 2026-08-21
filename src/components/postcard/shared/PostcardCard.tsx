@@ -20,6 +20,7 @@ export interface PostcardData {
   city: string;
   relationship: string;
   senderName: string;
+  senderGender?: "male" | "female" | null;
   message: string;
   surprise: Surprise;
   vibeLabel: string;
@@ -61,6 +62,18 @@ export const PostcardCard = forwardRef<
       {/* Airmail outer border */}
       <AirmailBorder thickness="md">
         <div className="p-4 sm:p-5 relative">
+          {/* Theme Watermark Emblem */}
+          {data.themeId === "ganpati" && (
+            <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none select-none text-9xl">
+              🕉️
+            </div>
+          )}
+          {data.themeId === "rakhi" && (
+            <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none select-none text-9xl">
+              🪡
+            </div>
+          )}
+
           {/* Corner theme decoration icon */}
           {theme.cornerDecorationEmoji && (
             <div
@@ -143,7 +156,7 @@ export const PostcardCard = forwardRef<
                   className="font-handwritten text-sm italic"
                   style={{ color: "var(--ink-soft)" }}
                 >
-                  Tera / Teri,
+                  {data.senderGender === "female" ? "Teri," : "Tera,"}
                 </div>
                 <div
                   className="font-handwritten text-base font-bold"
@@ -213,8 +226,8 @@ export const PostcardCard = forwardRef<
             </div>
           </div>
 
-          {/* ===== Surprise section ===== */}
-          {!isPlain && data.surprise && (
+          {/* ===== Surprise section (Hidden for Classic Plain Postcards) ===== */}
+          {!isPlain && data.themeId !== "classic" && data.surprise && (
             <SurpriseSlot
               surprise={data.surprise}
               themeAccent={theme.accentColor}
@@ -257,54 +270,65 @@ function SurpriseSlot({
   const ganpatiImage = isGanpatiMode ? getGanpatiImage(surprise.ganpatiImgId) : null;
 
   return (
-    <div className="mt-4">
-      <div className="flex items-center gap-2 mb-2">
-        <div className="h-px flex-1" style={{ background: "var(--border)" }} />
+    <div className="mt-5 pt-3 border-t" style={{ borderColor: "var(--border)" }}>
+      {/* Postal separator heading */}
+      <div className="flex items-center gap-2 mb-2 text-center justify-center">
+        <div className="h-px w-12" style={{ background: "var(--border)" }} />
         <span
           className="font-serif-vintage text-[9px] uppercase tracking-[0.25em]"
           style={{ color: "var(--ink-soft)" }}
         >
-          {isRakhiMode ? "🪡 Virtual Rakhi Gift" : isGanpatiMode ? "🕉️ Ganpati Bappa Blessing" : musicUrl ? "Surprise & Song 🎵" : "A little surprise"}
+          {isRevealed
+            ? isRakhiMode
+              ? "🪡 Virtual Rakhi Attached"
+              : isGanpatiMode
+              ? "🕉️ Ganpati Bappa Blessing"
+              : "✨ Revealed Surprise"
+            : "🔒 Something is hidden"}
         </span>
-        <div className="h-px flex-1" style={{ background: "var(--border)" }} />
+        <div className="h-px w-12" style={{ background: "var(--border)" }} />
       </div>
 
       <div
         className={cn(
-          "group relative w-full text-left rounded-md overflow-hidden transition-all",
+          "group relative w-full text-left rounded-md overflow-hidden transition-all duration-300",
           isLocked
-            ? "cursor-pointer hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            : "cursor-default"
+            ? "cursor-pointer hover:shadow-md border-dashed border-amber-900/30"
+            : "border border-amber-900/20 shadow-xs"
         )}
         style={{
-          border: `1.5px dashed ${accent}`,
-          backgroundColor: isLocked ? "rgba(243, 230, 196, 0.5)" : "#faf2dc",
+          backgroundColor: isLocked ? "rgba(243, 230, 196, 0.45)" : "#faf2dc",
         }}
         onClick={isLocked ? onReveal : undefined}
       >
         {isLocked ? (
-          <div className="p-4 flex items-center justify-center gap-3 min-h-[110px]">
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center select-none">
-              <div className="blur-md scale-110 opacity-60">
-                <span className="text-5xl">{surprise.emoji}</span>
+          <div className="relative p-5 min-h-[120px] flex flex-col items-center justify-center overflow-hidden select-none">
+            {/* Real underlying surprise blurred out so receiver sees something authentic is tucked inside */}
+            <div
+              className="absolute inset-0 p-4 opacity-40 filter blur-[14px] pointer-events-none select-none flex items-center justify-center gap-4 scale-95"
+              aria-hidden
+            >
+              <div className="text-4xl">{surprise.emoji || "🎁"}</div>
+              <div className="space-y-1">
+                <div className="h-4 w-32 bg-amber-950/40 rounded" />
+                <div className="h-3 w-48 bg-amber-950/30 rounded" />
               </div>
             </div>
-            <div className="relative flex flex-col items-center gap-1 text-center z-10">
-              <span className="text-2xl animate-float-soft" aria-hidden>
-                {isRakhiMode ? "🪡" : isGanpatiMode ? "🕉️" : "🎁"}
-              </span>
-              <span
-                className="font-serif-vintage text-sm font-semibold"
+
+            {/* Locked Prompt Overlay */}
+            <div className="relative z-10 text-center flex flex-col items-center gap-1.5 py-1">
+              <span className="text-xl leading-none">🔒</span>
+              <div
+                className="font-serif-vintage text-sm sm:text-base font-bold tracking-tight"
                 style={{ color: "var(--burgundy)" }}
               >
-                {isRakhiMode ? "Tap to tie Virtual Rakhi!" : isGanpatiMode ? "Tap to receive Bappa's Blessings!" : "Tap here to reveal your surprise!"}
-              </span>
-              <span
-                className="text-[10px] italic"
-                style={{ color: "var(--ink-soft)" }}
+                Something is hidden
+              </div>
+              <div
+                className="font-handwritten text-xs sm:text-sm text-[var(--ink-soft)]"
               >
-                Shhh... it&apos;s a secret worth the wait
-              </span>
+                Tap to discover it
+              </div>
             </div>
           </div>
         ) : (
@@ -322,37 +346,24 @@ function SurpriseSlot({
                   <VirtualRakhiDisplay rakhiId={surprise.rakhiId || "rakhi-gold-om"} isTied={true} />
                 </div>
               ) : isGanpatiMode && ganpatiImage ? (
-                /* Ganpati Bappa Image Attachment Display */
-                <div className="bg-amber-50/80 p-3 rounded-md border border-amber-900/20">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xl">{ganpatiImage.emoji}</span>
-                    <div>
-                      <div className="font-serif-vintage text-sm font-bold" style={{ color: "#b91c1c" }}>
-                        {ganpatiImage.title}
-                      </div>
-                      <div className="text-[11px] italic" style={{ color: "var(--ink-soft)" }}>
-                        {ganpatiImage.tagline}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="relative rounded-md overflow-hidden border border-amber-900/20 shadow-md mb-2">
+                /* Ganpati Bappa Illustrated Card Display */
+                <div className="bg-amber-50/90 p-3 rounded-md border border-amber-900/20 shadow-xs text-center">
+                  <div className="relative rounded-md overflow-hidden border border-amber-900/20 shadow-sm mb-2 bg-[#FAF4E6]">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={ganpatiImage.imageUrl}
                       alt={ganpatiImage.title}
-                      className="w-full h-48 sm:h-56 object-cover"
+                      className="w-full h-auto max-h-48 object-contain mx-auto"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end p-3">
-                      <p className="text-amber-100 font-handwritten text-sm drop-shadow-md">
-                        &ldquo;{ganpatiImage.blessing}&rdquo;
-                      </p>
-                    </div>
                   </div>
-
-                  <p className="font-handwritten text-xs text-center italic" style={{ color: "var(--ink-soft)" }}>
-                    &ldquo;{surprise.quote}&rdquo;
-                  </p>
+                  <div className="p-2 rounded bg-amber-100/60 border border-amber-900/10">
+                    <p className="text-amber-950 font-serif-vintage text-xs font-bold leading-tight">
+                      &ldquo;{ganpatiImage.blessing}&rdquo;
+                    </p>
+                    <p className="font-handwritten text-xs italic mt-0.5 text-amber-900/80">
+                      &ldquo;{surprise.quote}&rdquo;
+                    </p>
+                  </div>
                 </div>
               ) : (
                 /* Standard Character Surprise Header */

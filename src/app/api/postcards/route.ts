@@ -83,6 +83,7 @@ export async function POST(req: NextRequest) {
       city: sanitizeText(city).slice(0, 60),
       relationship: sanitizeText(relationship).slice(0, 40),
       senderName: sanitizeText(senderName).slice(0, 60),
+      senderGender: body.senderGender === "female" ? "female" : "male",
       vibe: cleanVibe,
       surpriseId,
       message: sanitizeText(message).slice(0, 1200),

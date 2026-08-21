@@ -42,14 +42,5 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function PostcardPage({ params }: PageProps) {
   const { id } = await params;
 
-  return (
-    <ReceiverFlow
-      token={id}
-      onGoHome={() => {
-        if (typeof window !== "undefined") {
-          window.location.href = "/";
-        }
-      }}
-    />
-  );
+  return <ReceiverFlow token={id} />;
 }

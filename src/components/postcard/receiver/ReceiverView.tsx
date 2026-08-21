@@ -1,14 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Home, Sparkles } from "lucide-react";
+import { Mail, ZoomIn, ZoomOut, RotateCcw, Heart, Send } from "lucide-react";
 import { PaperBackground } from "../shared/PaperBackground";
-import { AirmailDivider } from "../shared/AirmailBorder";
 import { PostcardCard } from "../shared/PostcardCard";
-import { WaxSeal } from "../shared/Decorations";
 import { ReactionBar } from "./ReactionBar";
 import type { PostcardData } from "../shared/PostcardCard";
+
+const ZOOM_STEPS = [0.75, 1.0, 1.25, 1.5, 2.0];
 
 export function ReceiverView({
   data,
@@ -24,138 +24,202 @@ export function ReceiverView({
   onGoHome: () => void;
 }) {
   const [revealed, setRevealed] = useState(false);
+  const [zoomIndex, setZoomIndex] = useState(1); // 1.0 (100%) by default
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+  const dragStart = useRef({ x: 0, y: 0 });
+  const initialPinchDist = useRef<number | null>(null);
+
+  const currentZoom = ZOOM_STEPS[zoomIndex];
 
   function handleReveal() {
     setRevealed(true);
     onReveal();
   }
 
+  function handleZoomIn() {
+    setZoomIndex((prev) => Math.min(prev + 1, ZOOM_STEPS.length - 1));
+  }
+
+  function handleZoomOut() {
+    setZoomIndex((prev) => Math.max(prev - 1, 0));
+  }
+
+  function handleResetZoom() {
+    setZoomIndex(1); // 100%
+    setPan({ x: 0, y: 0 });
+  }
+
+  // Touch pinch-to-zoom on mobile/tablet scoped strictly to the postcard container
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      initialPinchDist.current = dist;
+    } else if (e.touches.length === 1 && currentZoom > 1.0) {
+      isDragging.current = true;
+      dragStart.current = {
+        x: e.touches[0].clientX - pan.x,
+        y: e.touches[0].clientY - pan.y,
+      };
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && initialPinchDist.current !== null) {
+      const currentDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const diff = currentDist - initialPinchDist.current;
+      if (Math.abs(diff) > 40) {
+        if (diff > 0) handleZoomIn();
+        else handleZoomOut();
+        initialPinchDist.current = currentDist;
+      }
+    } else if (e.touches.length === 1 && isDragging.current && currentZoom > 1.0) {
+      setPan({
+        x: e.touches[0].clientX - dragStart.current.x,
+        y: e.touches[0].clientY - dragStart.current.y,
+      });
+    }
+  };
+
+  const handleTouchEnd = () => {
+    initialPinchDist.current = null;
+    isDragging.current = false;
+  };
+
   return (
-    <PaperBackground className="min-h-screen flex flex-col">
-      <header className="px-4 sm:px-8 pt-5 pb-3">
-        <div className="max-w-2xl mx-auto flex items-center justify-between gap-3">
-          <button
-            onClick={onGoHome}
-            className="inline-flex items-center gap-1 text-sm font-medium hover:opacity-70 transition"
-            style={{ color: "var(--ink-soft)" }}
-          >
-            <Home className="w-4 h-4" />
-            <span className="hidden sm:inline">Make your own</span>
-          </button>
+    <PaperBackground className="min-h-screen flex flex-col justify-between selection:bg-amber-900/10">
+      {/* Header — Subtle & clean postal bar with reading zoom controls */}
+      <header className="px-4 sm:px-8 py-3.5 border-b sticky top-0 z-30 bg-[#f7eed8]/95 backdrop-blur-xs" style={{ borderColor: "var(--border)" }}>
+        <div className="max-w-4xl mx-auto flex items-center justify-between gap-3">
+          {/* Brand */}
           <div className="flex items-center gap-2">
             <Mail className="w-4 h-4" style={{ color: "var(--burgundy)" }} />
             <span
-              className="font-serif-vintage font-bold tracking-wide text-sm sm:text-base"
+              className="font-serif-vintage font-bold tracking-tight text-sm sm:text-base"
               style={{ color: "var(--burgundy)" }}
             >
-              Your Postcard
+              Yaadon ka Postcard
             </span>
           </div>
-          <div className="w-20" />
+
+          {/* Scoped Postcard Zoom Controls (− 100% + Reset) */}
+          <div className="flex items-center gap-1.5 bg-[#faf3e0] border rounded-md px-2 py-1 shadow-2xs" style={{ borderColor: "var(--border)" }}>
+            <button
+              onClick={handleZoomOut}
+              disabled={zoomIndex === 0}
+              title="Zoom out"
+              aria-label="Zoom out postcard"
+              className="p-1 rounded hover:bg-black/5 disabled:opacity-30 transition cursor-pointer text-xs font-bold text-[var(--burgundy)]"
+            >
+              −
+            </button>
+            <span className="font-mono text-[11px] font-semibold px-1 min-w-[40px] text-center text-[var(--ink)]">
+              {Math.round(currentZoom * 100)}%
+            </span>
+            <button
+              onClick={handleZoomIn}
+              disabled={zoomIndex === ZOOM_STEPS.length - 1}
+              title="Zoom in"
+              aria-label="Zoom in postcard"
+              className="p-1 rounded hover:bg-black/5 disabled:opacity-30 transition cursor-pointer text-xs font-bold text-[var(--burgundy)]"
+            >
+              +
+            </button>
+            {currentZoom !== 1.0 && (
+              <button
+                onClick={handleResetZoom}
+                title="Reset zoom"
+                aria-label="Reset zoom"
+                className="ml-1 pl-1.5 border-l text-[10px] font-serif-vintage text-[var(--ink-soft)] hover:text-[var(--burgundy)] transition"
+                style={{ borderColor: "var(--border)" }}
+              >
+                Reset
+              </button>
+            )}
+          </div>
         </div>
-        <AirmailDivider className="mt-3" />
       </header>
 
-      <main className="flex-1 px-4 sm:px-8 py-6">
-        <div className="max-w-2xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 16, rotate: -1 }}
-            animate={{ opacity: 1, y: 0, rotate: 0 }}
-            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+      {/* Main Postcard Reading Viewport */}
+      <main className="flex-1 w-full px-3 sm:px-6 py-6 sm:py-10 flex flex-col items-center justify-start overflow-x-hidden">
+        <div className="w-full max-w-2xl mx-auto flex flex-col items-center">
+          {/* Postcard Zoomable Area */}
+          <div
+            ref={containerRef}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            className="w-full transition-transform duration-200 ease-out origin-top"
+            style={{
+              transform: `scale(${currentZoom}) translate(${pan.x / currentZoom}px, ${pan.y / currentZoom}px)`,
+              touchAction: currentZoom > 1.0 ? "none" : "pan-y",
+            }}
           >
-            {/* message-first banner */}
-            <div className="text-center mb-4">
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <PostcardCard
+                data={data}
+                revealState={revealed ? "revealed" : "hidden"}
+                onReveal={handleReveal}
+              />
+            </motion.div>
+          </div>
+
+          {/* After Reveal: Made you smile & Send one back CTA (Secondary) */}
+          <AnimatePresence>
+            {revealed && (
               <motion.div
-                initial={{ scale: 0.6, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                className="inline-block"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ delay: 0.25, duration: 0.4 }}
+                className="w-full mt-8 flex flex-col items-center"
               >
-                <WaxSeal size={48} emoji="💌" />
-              </motion.div>
-              <h1
-                className="font-serif-vintage text-2xl sm:text-3xl font-bold mt-2"
-                style={{ color: "var(--burgundy)" }}
-              >
-                Pehle message padho...
-              </h1>
-              <p
-                className="font-handwritten text-sm mt-1"
-                style={{ color: "var(--ink-soft)" }}
-              >
-                Neeche ek surprise bhi hai &mdash; jab ready ho, tap karna.
-              </p>
-            </div>
-
-            <PostcardCard
-              data={data}
-              revealState={revealed ? "revealed" : "hidden"}
-              onReveal={handleReveal}
-              className="animate-float-soft"
-            />
-
-            <AnimatePresence>
-              {revealed && (
-                <motion.div
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="mt-5 text-center"
+                {/* Subtle post-reveal action box */}
+                <div
+                  className="rounded-lg p-5 border bg-[#faf3e0]/90 text-center max-w-md w-full shadow-xs"
+                  style={{ borderColor: "var(--border)" }}
                 >
-                  <div
-                    className="paper-grain paper-stains rounded-md p-4 vignette inline-block max-w-md"
-                    style={{ border: "1px solid var(--border)" }}
-                  >
-                    <Sparkles
-                      className="w-5 h-5 mx-auto mb-1"
-                      style={{ color: "var(--gold)" }}
-                    />
-                    <p
-                      className="font-handwritten text-base leading-snug"
-                      style={{ color: "var(--ink)" }}
-                    >
-                      Surprise kaisa laga? {data.surprise.emoji}
-                    </p>
-                    <p
-                      className="font-handwritten text-xs mt-1"
-                      style={{ color: "var(--ink-soft)" }}
-                    >
-                      Apna postcard bhi banao aur kisi ko surprise do.
-                    </p>
-                    <button
-                      onClick={onGoHome}
-                      className="btn-vintage font-serif-vintage font-semibold px-5 py-2 rounded-md tracking-wide text-sm mt-3 inline-flex items-center gap-2"
-                    >
-                      <Mail className="w-4 h-4" />
-                      Make a Postcard
-                    </button>
+                  <div className="flex items-center justify-center gap-1.5 text-base sm:text-lg font-serif-vintage font-bold text-[var(--burgundy)]">
+                    <span>Made you smile?</span>
+                    <Heart className="w-4 h-4 fill-red-700 text-red-700" />
                   </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  <p className="font-handwritten text-xs sm:text-sm text-[var(--ink-soft)] mt-1">
+                    Send a little memory back to someone you cherish.
+                  </p>
+                  <button
+                    onClick={onGoHome}
+                    className="mt-4 btn-vintage font-serif-vintage font-semibold px-6 py-2.5 rounded-md tracking-wide text-sm inline-flex items-center gap-2 shadow-xs hover:shadow transition cursor-pointer"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>Send a postcard back</span>
+                  </button>
+                </div>
 
-            {/* Reaction bar — appears after reveal */}
-            <AnimatePresence>
-              {revealed && (
-                <motion.div
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 }}
-                  className="mt-4"
-                >
+                {/* Reaction bar for quick feedback */}
+                <div className="w-full mt-6">
                   <ReactionBar token={token} initialReaction={initialReaction} />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </main>
 
-      <footer className="px-4 sm:px-8 pb-5 pt-4 text-center">
+      {/* Footer */}
+      <footer className="px-4 sm:px-8 py-5 text-center border-t mt-6" style={{ borderColor: "var(--border)" }}>
         <p
-          className="font-serif-vintage text-[10px] tracking-[0.2em] uppercase"
-          style={{ color: "var(--ink-soft)" }}
+          className="font-serif-vintage text-[10px] sm:text-[11px] tracking-[0.2em] uppercase text-[var(--ink-soft)]"
         >
           ♡ &mdash; A postcard travels heart to heart. &mdash; ♡
         </p>

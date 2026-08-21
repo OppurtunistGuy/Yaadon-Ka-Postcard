@@ -9,6 +9,15 @@ import { PostcardCard } from "../shared/PostcardCard";
 import { useSenderStore } from "@/lib/postcard-store";
 import { getSurpriseById, getVibeMeta } from "@/lib/surprises";
 import { parseMusicUrl } from "@/lib/security";
+import { generateInspirationalMessage, SupportedLanguage } from "@/lib/message-generator";
+
+const LANG_OPTIONS: { id: SupportedLanguage; label: string }[] = [
+  { id: "auto", label: "✨ Any" },
+  { id: "mr", label: "🚩 मराठी" },
+  { id: "hi", label: "🇮🇳 हिंदी" },
+  { id: "te", label: "🌺 తెలుగు" },
+  { id: "hinglish", label: "✉️ Hinglish" },
+];
 
 const PROMPTS = [
   "Tu chaahe jitna door ho, humsafar wali feeling kabhi nahi badalti...",
@@ -26,6 +35,27 @@ export function MessageScreen() {
 
   const [rawMusicInput, setRawMusicInput] = useState(draft.musicUrl || "");
   const [musicError, setMusicError] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [selectedLang, setSelectedLang] = useState<SupportedLanguage>("auto");
+
+  function handleInspireMe(overrideLang?: SupportedLanguage) {
+    const langToUse = overrideLang || selectedLang;
+    setIsGenerating(true);
+    setTimeout(() => {
+      const generated = generateInspirationalMessage({
+        themeId: draft.themeId,
+        vibe: draft.vibe,
+        receiverName: draft.receiverName,
+        senderName: draft.senderName,
+        city: draft.city,
+        relationship: draft.relationship,
+        surpriseId: draft.surpriseId,
+        language: langToUse,
+      });
+      updateDraft({ message: generated });
+      setIsGenerating(false);
+    }, 200);
+  }
 
   function handleMusicChange(val: string) {
     setRawMusicInput(val);
@@ -55,7 +85,7 @@ export function MessageScreen() {
         step={3}
         total={4}
         title="Write your message"
-        onBack={() => setStep("surprise")}
+        onBack={() => setStep(draft.themeId === "classic" ? "details" : "surprise")}
       />
 
       <main className="flex-1 px-4 sm:px-8 py-6">
@@ -97,35 +127,61 @@ export function MessageScreen() {
                   color: "var(--ink)",
                 }}
               />
-              <div className="flex items-center justify-between mt-2">
-                <span
-                  className="text-[11px] font-mono"
-                  style={{ color: "var(--ink-soft)" }}
-                >
-                  {draft.message.length}/1200
-                </span>
-                <div className="flex items-center gap-2">
+              {/* Multilingual Inspire Language Chips & Actions */}
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 bg-amber-50/70 p-2.5 rounded-md border border-amber-900/15">
+                <div className="flex items-center gap-1 overflow-x-auto max-w-full">
+                  <span className="text-[11px] font-serif-vintage font-bold mr-1" style={{ color: "var(--burgundy)" }}>
+                    🌐 Language:
+                  </span>
+                  {LANG_OPTIONS.map((lang) => {
+                    const isSelected = selectedLang === lang.id;
+                    return (
+                      <button
+                        key={lang.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedLang(lang.id);
+                          handleInspireMe(lang.id);
+                        }}
+                        className={`text-xs px-2 py-0.9 rounded transition-all font-medium cursor-pointer whitespace-nowrap ${
+                          isSelected
+                            ? "bg-[var(--burgundy)] text-amber-50 shadow-sm"
+                            : "bg-white/80 text-[var(--ink-soft)] hover:bg-amber-100/70 border border-amber-900/10"
+                        }`}
+                      >
+                        {lang.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="flex items-center gap-2 ml-auto">
                   <button
                     onClick={() => updateDraft({ message: "" })}
-                    className="inline-flex items-center gap-1 text-xs hover:opacity-70 transition"
+                    className="inline-flex items-center gap-1 text-xs hover:opacity-70 transition px-1 py-1"
                     style={{ color: "var(--ink-soft)" }}
                   >
                     <Eraser className="w-3.5 h-3.5" />
                     Clear
                   </button>
                   <button
-                    onClick={() =>
-                      updateDraft({
-                        message:
-                          PROMPTS[Math.floor(Math.random() * PROMPTS.length)],
-                      })
-                    }
-                    className="btn-pastel inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded"
+                    onClick={() => handleInspireMe()}
+                    disabled={isGenerating}
+                    className="btn-pastel inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded transition cursor-pointer hover:shadow-sm disabled:opacity-50"
                   >
-                    <Sparkles className="w-3.5 h-3.5" />
-                    Inspire me
+                    <Sparkles className={`w-3.5 h-3.5 ${isGenerating ? "animate-spin text-amber-600" : ""}`} />
+                    <span>{isGenerating ? "Inspiring..." : "Inspire me ✨"}</span>
                   </button>
                 </div>
+              </div>
+
+              <div className="flex items-center justify-between mt-1.5 px-0.5">
+                <span
+                  className="text-[11px] font-mono"
+                  style={{ color: "var(--ink-soft)" }}
+                >
+                  {draft.message.length}/1200
+                </span>
               </div>
 
               {/* Music Attachment section for Romantic & Action Hero vibes */}
@@ -204,6 +260,7 @@ export function MessageScreen() {
                     city: draft.city,
                     relationship: draft.relationship,
                     senderName: draft.senderName,
+                    senderGender: draft.senderGender,
                     message: draft.message,
                     surprise,
                     vibeLabel: vibeMeta.label,

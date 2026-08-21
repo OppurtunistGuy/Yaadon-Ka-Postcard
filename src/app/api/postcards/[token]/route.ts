@@ -85,6 +85,7 @@ export async function GET(
         city: sanitizeText(card.city),
         relationship: sanitizeText(card.relationship),
         senderName: sanitizeText(card.senderName),
+        senderGender: card.senderGender || "male",
         vibe: card.vibe,
         vibeMeta: getVibeMeta(card.vibe as "jolly" | "romantic" | "action" | "classic"),
         surpriseId: card.surpriseId,
@@ -110,6 +111,8 @@ export async function GET(
         gifUrl: surprise.gifUrl,
         gif: surprise.gif,
         accent: surprise.accent,
+        rakhiId: surprise.rakhiId,
+        ganpatiImgId: surprise.ganpatiImgId,
       },
     });
   } catch (err) {

@@ -19,6 +19,7 @@ export interface PostcardDraft {
   city: string;
   relationship: string;
   senderName: string;
+  senderGender: "male" | "female";
   vibe: Vibe | null;
   surpriseId: string | null;
   message: string;
@@ -48,6 +49,7 @@ const emptyDraft: PostcardDraft = {
   city: "",
   relationship: "",
   senderName: "",
+  senderGender: "male",
   vibe: null,
   surpriseId: null,
   message: "",

@@ -524,3 +524,120 @@
   animation: sound-pulse 2s ease-in-out infinite;
 }
 
+/* ===== Postcard Zoom System ===== */
+
+/**
+ * .postcard-viewport — clips scaled overflow so the page never gets
+ * a horizontal scrollbar when the postcard is zoomed in.
+ * Width is always 100% of the parent; height adapts to content.
+ */
+.postcard-viewport {
+  width: 100%;
+  overflow: hidden;
+  /* Allow the scaled inner to flow downward without a fixed height */
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/**
+ * .postcard-zoom-inner — the actual transform target.
+ * Scale is set via an inline CSS variable --pc-scale (default 1).
+ * transform-origin: top center keeps the card anchored at the top
+ * so the user always sees the message header first.
+ */
+.postcard-zoom-inner {
+  transform: scale(var(--pc-scale, 1));
+  transform-origin: top center;
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  /* When scaled > 1 the visual height grows; let it push the page down */
+  will-change: transform;
+}
+
+/* ===== Responsive base helpers ===== */
+
+/* Prevent body-level horizontal overflow on small viewports */
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Fluid page section — keeps content from touching the viewport edge */
+.page-section {
+  width: 100%;
+  padding-inline: clamp(1rem, 4vw, 2rem);
+}
+
+/* Fluid card max-width that stays truly fluid on mobile */
+.postcard-container {
+  width: 100%;
+  max-width: min(100%, 42rem);
+  margin-inline: auto;
+}
+
+/* Responsive handwritten font scale */
+.font-handwritten {
+  font-size: clamp(0.875rem, 2.2vw, 1rem);
+}
+
+/* Touch-action: none on the zoom inner during an active pinch gesture
+   (toggled via JS class) to prevent browser native page zoom interfering */
+.postcard-zoom-inner.is-pinching {
+  touch-action: none;
+}
+
+/* Zoom controls toolbar */
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 0.375rem;
+  border: 1px solid var(--border);
+  background: rgba(247, 238, 216, 0.92);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 8px rgba(90, 50, 20, 0.12);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.75rem;
+  color: var(--ink);
+  user-select: none;
+}
+.zoom-controls button {
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+  border: 1px solid var(--border);
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  color: var(--ink);
+  font-size: 0.75rem;
+}
+.zoom-controls button:hover {
+  background: var(--paper-dark);
+  transform: translateY(-1px);
+}
+.zoom-controls button:active {
+  transform: translateY(0);
+}
+.zoom-controls button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+.zoom-controls .zoom-level {
+  min-width: 2.8rem;
+  text-align: center;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+/* ===== Small-screen spacing overrides ===== */
+@media (max-width: 479px) {
+  /* Tighter page padding on very small phones */
+  .px-4 { padding-inline: 0.75rem; }
+  /* Reduce section top/bottom padding */
+  .py-6 { padding-block: 1rem; }
+  .pt-5 { padding-top: 0.875rem; }
+  .pb-3 { padding-bottom: 0.625rem; }
+}
+
