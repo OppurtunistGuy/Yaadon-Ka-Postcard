@@ -71,7 +71,8 @@ export function ReceiverFlow({
     let cancelled = false;
     async function load() {
       try {
-        const res = await fetch(`/api/postcards/${token}`, { method: "GET" });
+        const safeToken = encodeURIComponent(token);
+        const res = await fetch(`/api/postcards/${safeToken}`, { method: "GET" });
         const data = await res.json();
         if (cancelled) return;
         if (!res.ok || !data.ok) {
@@ -94,7 +95,8 @@ export function ReceiverFlow({
   function handleOpen() {
     play("open");
     setPhase("opening");
-    fetch(`/api/postcards/${token}`, {
+    const safeToken = encodeURIComponent(token);
+    fetch(`/api/postcards/${safeToken}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "open" }),
@@ -104,7 +106,8 @@ export function ReceiverFlow({
 
   function handleReveal() {
     play("reveal");
-    fetch(`/api/postcards/${token}`, {
+    const safeToken = encodeURIComponent(token);
+    fetch(`/api/postcards/${safeToken}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "reveal" }),

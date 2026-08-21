@@ -51,48 +51,78 @@ export function encodeSelfContainedToken(payload: PostcardPayload): string {
   return `P_${base64}`;
 }
 
-export function decodeSelfContainedToken(token: string): PostcardPayload | null {
-  if (!token.startsWith("P_")) return null;
-  try {
-    const rawStr = token.slice(2);
-    const json = Buffer.from(rawStr, "base64url").toString("utf-8");
-    const d = JSON.parse(json);
-    if (!d || !d.r || !d.i) return null;
+export function decodeSelfContainedToken(rawToken: string): PostcardPayload | null {
+  if (!rawToken) return null;
+  const cleanToken = decodeURIComponent(rawToken).trim();
 
-    return {
-      token,
-      themeId: d.t || "classic",
-      receiverName: d.r,
-      city: d.c || "",
-      relationship: d.l || "",
-      senderName: d.s || "",
-      senderGender: d.g || "male",
-      vibe: d.v || "classic",
-      surpriseId: d.i,
-      message: d.m || "",
-      musicUrl: d.mu || null,
-      musicPlatform: d.mp || null,
-      musicTitle: d.mt || null,
-      createdAt: new Date(),
-    };
-  } catch {
-    return null;
+  // Mode 1: P_ token
+  if (cleanToken.startsWith("P_")) {
+    try {
+      const rawStr = cleanToken.slice(2);
+      const json = Buffer.from(rawStr, "base64url").toString("utf-8");
+      const d = JSON.parse(json);
+      if (d && (d.r || d.receiverName) && (d.i || d.surpriseId)) {
+        return {
+          token: cleanToken,
+          themeId: d.t || d.themeId || "classic",
+          receiverName: d.r || d.receiverName,
+          city: d.c || d.city || "",
+          relationship: d.l || d.relationship || "",
+          senderName: d.s || d.senderName || "",
+          senderGender: d.g || d.senderGender || "male",
+          vibe: d.v || d.vibe || "classic",
+          surpriseId: d.i || d.surpriseId,
+          message: d.m || d.message || "",
+          musicUrl: d.mu || d.musicUrl || null,
+          musicPlatform: d.mp || d.musicPlatform || null,
+          musicTitle: d.mt || d.musicTitle || null,
+          createdAt: new Date(),
+        };
+      }
+    } catch {
+      // ignore
+    }
   }
+
+  // Mode 2: Raw base64url JSON fallback (legacy or external token format)
+  try {
+    const json = Buffer.from(cleanToken, "base64url").toString("utf-8");
+    const d = JSON.parse(json);
+    if (d && (d.r || d.receiverName) && (d.i || d.surpriseId)) {
+      return {
+        token: cleanToken,
+        themeId: d.t || d.themeId || "classic",
+        receiverName: d.r || d.receiverName,
+        city: d.c || d.city || "",
+        relationship: d.l || d.relationship || "",
+        senderName: d.s || d.senderName || "",
+        senderGender: d.g || d.senderGender || "male",
+        vibe: d.v || d.vibe || "classic",
+        surpriseId: d.i || d.surpriseId,
+        message: d.m || d.message || "",
+        musicUrl: d.mu || d.musicUrl || null,
+        musicPlatform: d.mp || d.musicPlatform || null,
+        musicTitle: d.mt || d.musicTitle || null,
+        createdAt: new Date(),
+      };
+    }
+  } catch {
+    // ignore
+  }
+
+  return null;
 }
 
 export async function createPostcard(payload: PostcardPayload): Promise<{ token: string }> {
-  // Always create fallback self-contained token
+  // Always create self-contained token containing complete postcard payload
   const selfContainedToken = encodeSelfContainedToken(payload);
-  const opaqueToken = generateOpaqueId(10);
 
-  // Cache in memory
+  // Cache in server memory map
   postcardCache.set(selfContainedToken, { ...payload, token: selfContainedToken });
-  postcardCache.set(opaqueToken, { ...payload, token: opaqueToken });
 
-  let savedToDb = false;
   try {
     const dataToInsert: any = {
-      token: opaqueToken,
+      token: selfContainedToken,
       themeId: payload.themeId || "classic",
       receiverName: payload.receiverName,
       city: payload.city,
@@ -109,20 +139,16 @@ export async function createPostcard(payload: PostcardPayload): Promise<{ token:
     await (db.postcard as any).create({
       data: dataToInsert,
     });
-    savedToDb = true;
   } catch (e) {
-    console.warn("[createPostcard] DB create warning, using failproof self-contained token fallback:", e);
+    console.warn("[createPostcard] DB save notice (self-contained token fallback active):", e);
   }
 
-  // If DB create failed or if running on Vercel ephemeral filesystem, use selfContainedToken to ensure 100% reliability
-  const finalToken = (savedToDb && !process.env.VERCEL) ? opaqueToken : selfContainedToken;
-  postcardCache.set(finalToken, { ...payload, token: finalToken });
-
-  return { token: finalToken };
+  return { token: selfContainedToken };
 }
 
-export async function fetchPostcardByToken(token: string): Promise<PostcardPayload | null> {
-  if (!token) return null;
+export async function fetchPostcardByToken(rawToken: string): Promise<PostcardPayload | null> {
+  if (!rawToken) return null;
+  const token = decodeURIComponent(rawToken).trim();
 
   // 1. Check memory cache first
   if (postcardCache.has(token)) {
@@ -156,10 +182,10 @@ export async function fetchPostcardByToken(token: string): Promise<PostcardPaylo
       return result;
     }
   } catch (e) {
-    console.warn("[fetchPostcardByToken] DB lookup warning:", e);
+    console.warn("[fetchPostcardByToken] DB lookup notice:", e);
   }
 
-  // 3. Check self-contained P_ token
+  // 3. Decode self-contained token
   const decoded = decodeSelfContainedToken(token);
   if (decoded) {
     postcardCache.set(token, decoded);
