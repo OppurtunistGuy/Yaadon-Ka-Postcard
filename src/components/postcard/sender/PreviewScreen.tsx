@@ -86,11 +86,13 @@ export function PreviewScreen() {
     }
   }
 
+  const isClassic = !draft.themeId || draft.themeId === "classic";
+
   return (
     <PaperBackground className="min-h-screen flex flex-col">
       <SenderHeader
-        step={4}
-        total={4}
+        step={isClassic ? 3 : 4}
+        total={isClassic ? 3 : 4}
         title="Preview & send"
         onBack={() => setStep("message")}
       />

@@ -135,13 +135,15 @@ export function DetailsScreen() {
       updateDraft({ senderName: sRes.normalized });
     }
 
-    if (!isFestivalMode && !draft.vibe) {
-      hasError = true;
-    }
-
     if (hasError) return;
 
-    setStep("surprise");
+    const isClassic = !draft.themeId || draft.themeId === "classic";
+    if (isClassic) {
+      updateDraft({ surpriseId: null, vibe: "classic" });
+      setStep("message");
+    } else {
+      setStep("surprise");
+    }
   }
 
   function handleThemeSelect(newThemeId: FestivalThemeId) {
@@ -150,6 +152,7 @@ export function DetailsScreen() {
     if (newThemeId === "classic") {
       updateDraft({
         themeId: newThemeId,
+        vibe: "classic",
         surpriseId: null,
       });
     } else {
@@ -161,6 +164,8 @@ export function DetailsScreen() {
     }
   }
 
+  const isClassic = !draft.themeId || draft.themeId === "classic";
+
   const selectedRelationship = RELATIONSHIP_OPTIONS.includes(draft.relationship)
     ? draft.relationship
     : draft.relationship
@@ -169,7 +174,7 @@ export function DetailsScreen() {
 
   return (
     <PaperBackground className="min-h-screen flex flex-col selection:bg-amber-900/10">
-      <SenderHeader step={1} total={4} title="Who's it for?" />
+      <SenderHeader step={1} total={isClassic ? 3 : 4} title="Who's it for?" />
 
       <main className="flex-1 px-4 sm:px-8 py-6 box-border min-w-0">
         <div className="max-w-2xl mx-auto space-y-6">
@@ -191,7 +196,7 @@ export function DetailsScreen() {
                 </h3>
               </div>
               <p className="font-handwritten text-xs mb-3 text-[var(--ink-soft)]">
-                Chuno Postcard ka avatar — Festival theme ya Classic Celebrity mode!
+                Select your postcard theme — Classic airmail or Festival special!
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
@@ -222,12 +227,7 @@ export function DetailsScreen() {
                         </div>
                       </div>
                       {selected && (
-                        <span
-                          className="w-4 h-4 rounded-full flex items-center justify-center shrink-0"
-                          style={{ backgroundColor: theme.accentColor, color: "#fff" }}
-                        >
-                          <Check className="w-2.5 h-2.5" />
-                        </span>
+                        <Check className="w-4 h-4 text-[var(--burgundy)] shrink-0 font-bold" />
                       )}
                     </button>
                   );
@@ -235,129 +235,94 @@ export function DetailsScreen() {
               </div>
             </div>
 
-            <h2 className="font-serif-vintage text-2xl font-bold mb-1 text-[var(--burgundy)]">
-              Address the postcard
-            </h2>
-            <p className="font-handwritten text-sm mb-5 text-[var(--ink-soft)]">
-              Puraani tarah &mdash; naam, sheher, rishta, aur apna naam bhi.
-            </p>
-
-            {/* Structure Form Layout */}
+            {/* Recipient Details Form */}
             <div className="space-y-4">
-              {/* Recipient's Name - Full Width */}
               <div>
-                <label className="block">
-                  <span className="font-serif-vintage text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 mb-1 text-[var(--burgundy)]">
-                    <span>👤</span> Recipient&apos;s Name
-                  </span>
+                <label className="block font-serif-vintage text-xs font-bold uppercase tracking-wider text-[var(--burgundy)] mb-1">
+                  Recipient Name (Kis ke liye hai?)
+                </label>
+                <input
+                  type="text"
+                  value={draft.receiverName}
+                  onChange={(e) => {
+                    updateDraft({ receiverName: e.target.value });
+                    if (receiverError) setReceiverError(undefined);
+                  }}
+                  placeholder="e.g. Varsha Patil"
+                  maxLength={50}
+                  className={cn(
+                    "field-vintage w-full font-handwritten text-base px-3 py-2 rounded-md outline-none border bg-[#fffceb]",
+                    receiverError ? "border-red-600 focus:ring-1 focus:ring-red-600" : "border-[var(--border)]"
+                  )}
+                />
+                {receiverError && <p className="text-xs text-red-600 font-sans mt-1">{receiverError}</p>}
+              </div>
+
+              <div>
+                <label className="block font-serif-vintage text-xs font-bold uppercase tracking-wider text-[var(--burgundy)] mb-1">
+                  City / Location (Kahan rehte hain?)
+                </label>
+                <CityCombobox
+                  value={draft.city}
+                  onChange={(city) => {
+                    updateDraft({ city });
+                    if (cityError) setCityError(undefined);
+                  }}
+                  error={cityError}
+                />
+                {cityError && <p className="text-xs text-red-600 font-sans mt-1">{cityError}</p>}
+              </div>
+
+              <div>
+                <label className="block font-serif-vintage text-xs font-bold uppercase tracking-wider text-[var(--burgundy)] mb-1">
+                  Relationship (Kya lagte hain aapke?)
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-2">
+                  {RELATIONSHIP_OPTIONS.map((opt) => {
+                    const sel = draft.relationship === opt;
+                    return (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => {
+                          updateDraft({ relationship: opt });
+                          setCustomRelationship("");
+                          if (relationshipError) setRelationshipError(undefined);
+                        }}
+                        className={cn(
+                          "py-2 px-3 rounded-md text-xs font-serif-vintage transition border text-center cursor-pointer",
+                          sel
+                            ? "bg-amber-100 border-[var(--burgundy)] border-2 font-bold shadow-2xs"
+                            : "bg-amber-50/60 border-amber-900/15 hover:bg-amber-100/40"
+                        )}
+                      >
+                        {opt}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {selectedRelationship === "Other" && (
                   <input
                     type="text"
-                    value={draft.receiverName}
+                    value={customRelationship}
                     onChange={(e) => {
-                      updateDraft({ receiverName: e.target.value });
-                      if (receiverError) setReceiverError(undefined);
+                      setCustomRelationship(e.target.value);
+                      updateDraft({ relationship: e.target.value });
+                      if (relationshipError) setRelationshipError(undefined);
                     }}
-                    onBlur={handleReceiverBlur}
-                    placeholder="e.g. Varsha"
+                    placeholder="Describe relationship (e.g. Childhood Bestie)"
                     maxLength={50}
-                    autoFocus
-                    className={cn(
-                      "field-vintage w-full font-handwritten text-base px-3 py-2.5 rounded-md outline-none transition-all leading-relaxed h-[44px] sm:h-[44px]",
-                      receiverError ? "border-red-600 bg-red-50/40" : "border-[var(--border)] bg-[#fffceb]"
-                    )}
-                    style={{ color: "var(--ink)" }}
+                    className="field-vintage w-full font-handwritten text-sm px-3 py-2 rounded-md outline-none border border-[var(--border)] bg-[#fffceb] mt-1"
                   />
-                </label>
-                {receiverError && (
-                  <p className="text-xs text-red-700 mt-1 font-sans font-medium">{receiverError}</p>
                 )}
+                {relationshipError && <p className="text-xs text-red-600 font-sans mt-1">{relationshipError}</p>}
               </div>
 
-              {/* Side-by-Side: City & Relationship */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                {/* City Combobox */}
-                <div>
-                  <label className="block mb-1">
-                    <span className="font-serif-vintage text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 text-[var(--burgundy)]">
-                      <span>📍</span> City / Location
-                    </span>
-                  </label>
-                  <CityCombobox
-                    value={draft.city}
-                    onChange={(cityName) => {
-                      updateDraft({ city: cityName });
-                      if (cityError) setCityError(undefined);
-                    }}
-                    onBlur={handleCityBlur}
-                    error={cityError}
-                  />
-                </div>
-
-                {/* Relationship Dropdown */}
-                <div>
-                  <label className="block mb-1">
-                    <span className="font-serif-vintage text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 text-[var(--burgundy)]">
-                      <span>🤝</span> Relationship
-                    </span>
-                  </label>
-                  <select
-                    value={selectedRelationship}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      if (val === "Other") {
-                        updateDraft({ relationship: "Other" });
-                        setCustomRelationship("");
-                      } else {
-                        updateDraft({ relationship: val });
-                        setRelationshipError(undefined);
-                      }
-                    }}
-                    className={cn(
-                      "field-vintage w-full font-handwritten text-base px-3 py-2 rounded-md outline-none transition-all leading-relaxed h-[44px] sm:h-[44px] cursor-pointer",
-                      relationshipError ? "border-red-600 bg-red-50/40" : "border-[var(--border)] bg-[#fffceb]"
-                    )}
-                    style={{ color: "var(--ink)" }}
-                  >
-                    <option value="" disabled>
-                      Select Relationship...
-                    </option>
-                    {RELATIONSHIP_OPTIONS.map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt}
-                      </option>
-                    ))}
-                  </select>
-
-                  {selectedRelationship === "Other" && (
-                    <input
-                      type="text"
-                      value={customRelationship}
-                      onChange={(e) => {
-                        setCustomRelationship(e.target.value);
-                        updateDraft({ relationship: e.target.value });
-                        if (relationshipError) setRelationshipError(undefined);
-                      }}
-                      onBlur={handleCustomRelationshipBlur}
-                      placeholder="Specify relationship (max 30 chars)..."
-                      maxLength={30}
-                      className="mt-2 field-vintage w-full font-handwritten text-sm px-3 py-2 rounded-md outline-none border-[var(--border)] bg-[#fffceb] h-[40px]"
-                    />
-                  )}
-
-                  {relationshipError && (
-                    <p className="text-xs text-red-700 mt-1 font-sans font-medium">{relationshipError}</p>
-                  )}
-                </div>
-              </div>
-
-              {/* From / Sender Name */}
               <div>
-                <label className="block mb-1">
-                  <span className="font-serif-vintage text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 text-[var(--burgundy)]">
-                    <span>✍️</span> Your Name
-                  </span>
+                <label className="block font-serif-vintage text-xs font-bold uppercase tracking-wider text-[var(--burgundy)] mb-1">
+                  Sender Name (Aapka naam?)
                 </label>
-
                 <input
                   type="text"
                   value={draft.senderName}
@@ -365,85 +330,16 @@ export function DetailsScreen() {
                     updateDraft({ senderName: e.target.value });
                     if (senderError) setSenderError(undefined);
                   }}
-                  onBlur={handleSenderBlur}
-                  placeholder="e.g. Rahul / Priya"
+                  placeholder="e.g. Vikas Patil"
                   maxLength={50}
                   className={cn(
-                    "field-vintage w-full font-handwritten text-base px-3 py-2.5 rounded-md outline-none transition-all leading-relaxed h-[44px] sm:h-[44px]",
-                    senderError ? "border-red-600 bg-red-50/40" : "border-[var(--border)] bg-[#fffceb]"
+                    "field-vintage w-full font-handwritten text-base px-3 py-2 rounded-md outline-none border bg-[#fffceb]",
+                    senderError ? "border-red-600 focus:ring-1 focus:ring-red-600" : "border-[var(--border)]"
                   )}
-                  style={{ color: "var(--ink)" }}
                 />
-
-                {senderError && (
-                  <p className="text-xs text-red-700 mt-1 font-sans font-medium">{senderError}</p>
-                )}
+                {senderError && <p className="text-xs text-red-600 font-sans mt-1">{senderError}</p>}
               </div>
             </div>
-
-            {/* Vibe Selector (Classic Mode) */}
-            {!isFestivalMode ? (
-              <>
-                <AirmailDivider className="my-6" />
-                <div>
-                  <h3 className="font-serif-vintage text-lg font-bold mb-1 text-[var(--burgundy)]">
-                    Pick the vibe & celebrity mode
-                  </h3>
-                  <p className="font-handwritten text-sm mb-4 text-[var(--ink-soft)]">
-                    Yeh decide karega ki kaunse Bollywood characters & surprises dikhenge.
-                  </p>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    {VIBES.map((v) => {
-                      const selected = draft.vibe === v.id;
-                      return (
-                        <button
-                          key={v.id}
-                          type="button"
-                          onClick={() => updateDraft({ vibe: v.id as Vibe, surpriseId: null })}
-                          className={cn(
-                            "vibe-card relative paper-grain rounded-md p-3 text-center vignette cursor-pointer transition-all",
-                            selected && "vibe-card-selected",
-                            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                          )}
-                          style={{
-                            border: selected
-                              ? `2px solid var(--burgundy)`
-                              : `1px solid var(--border)`,
-                            backgroundColor: selected ? "#f5e7c0" : "#faf2dc",
-                            boxShadow: selected ? "0 6px 16px rgba(90,50,20,0.18)" : undefined,
-                          }}
-                        >
-                          {selected && (
-                            <span
-                              className="absolute -top-2 -right-2 w-5 h-5 rounded-full flex items-center justify-center shadow"
-                              style={{ backgroundColor: "var(--burgundy)" }}
-                            >
-                              <Check className="w-3 h-3 text-white" />
-                            </span>
-                          )}
-                          <div className="text-3xl mb-1.5">{v.emoji}</div>
-                          <div className="font-serif-vintage font-bold text-sm leading-tight text-[var(--burgundy)]">
-                            {v.label}
-                          </div>
-                          <div className="font-handwritten text-[11px] mt-0.5 leading-tight text-[var(--ink-soft)]">
-                            {v.tagline}
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div
-                className="mt-6 p-3 rounded-md border border-amber-900/20 text-center bg-[#faf3e0]/80"
-              >
-                <span className="font-handwritten text-xs text-[var(--ink-soft)]">
-                  🌿 Festival Mode is active — Celebrity & Vibe selection is hidden for festival-specific surprises.
-                </span>
-              </div>
-            )}
           </motion.div>
 
           {/* Navigation Controls */}
@@ -458,9 +354,9 @@ export function DetailsScreen() {
 
             <button
               onClick={handleContinue}
-              className="btn-vintage font-serif-vintage font-semibold px-6 py-2.5 rounded-md tracking-wide flex items-center gap-2 h-11 cursor-pointer shadow-sm hover:shadow"
+              className="btn-vintage font-serif-vintage font-semibold px-6 py-2.5 rounded-md tracking-wide flex items-center gap-2 h-11 cursor-pointer shadow-sm hover:shadow text-sm"
             >
-              Choose Theme & Surprise
+              <span>{isClassic ? "Write your message" : "Choose Festival Surprise"}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>

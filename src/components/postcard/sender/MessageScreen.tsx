@@ -79,13 +79,15 @@ export function MessageScreen() {
     }
   }
 
+  const isClassic = !draft.themeId || draft.themeId === "classic";
+
   return (
     <PaperBackground className="min-h-screen flex flex-col">
       <SenderHeader
-        step={3}
-        total={4}
+        step={isClassic ? 2 : 3}
+        total={isClassic ? 3 : 4}
         title="Write your message"
-        onBack={() => setStep(draft.themeId === "classic" ? "details" : "surprise")}
+        onBack={() => setStep(isClassic ? "details" : "surprise")}
       />
 
       <main className="flex-1 px-4 sm:px-8 py-6">
@@ -281,11 +283,11 @@ export function MessageScreen() {
           {/* nav */}
           <div className="mt-6 flex items-center justify-between">
             <button
-              onClick={() => setStep("surprise")}
-              className="text-sm font-medium hover:opacity-70 transition"
+              onClick={() => setStep(isClassic ? "details" : "surprise")}
+              className="text-sm font-medium hover:opacity-70 transition cursor-pointer"
               style={{ color: "var(--ink-soft)" }}
             >
-              ← Back
+              &larr; Back
             </button>
             <button
               disabled={draft.message.trim().length < 3 || Boolean(musicError)}
