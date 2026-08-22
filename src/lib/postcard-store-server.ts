@@ -178,7 +178,7 @@ export async function createPostcard(payload: PostcardPayload): Promise<{ token:
       senderName: payload.senderName,
       senderGender: payload.senderGender || "male",
       vibe: payload.vibe,
-      surpriseId: payload.surpriseId,
+      surpriseId: payload.surpriseId || null,
       message: payload.message,
       musicUrl: payload.musicUrl || null,
       musicPlatform: payload.musicPlatform || null,

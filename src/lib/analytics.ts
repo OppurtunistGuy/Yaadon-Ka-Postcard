@@ -18,14 +18,16 @@ export interface AnalyticsEventParams {
  */
 export async function trackEvent({ event, themeId, rating }: AnalyticsEventParams): Promise<void> {
   try {
-    await (db as any).analyticsEvent.create({
-      data: {
-        event,
-        themeId: themeId || null,
-        rating: rating || null,
-      },
-    });
+    if ((db as any)?.analyticsEvent?.create) {
+      await (db as any).analyticsEvent.create({
+        data: {
+          event,
+          themeId: themeId || null,
+          rating: rating || null,
+        },
+      }).catch(() => {});
+    }
   } catch (e) {
-    console.warn("[analytics] Event log notice:", e);
+    // Fail silently on serverless read-only DB environments
   }
 }
