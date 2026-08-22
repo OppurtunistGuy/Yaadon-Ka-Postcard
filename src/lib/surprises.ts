@@ -511,7 +511,61 @@ export const SURPRISES_RAW: Surprise[] = [
     ),
   },
 
-  // ============ ❤️ ROMANTIC — Ranbir Kapoor, Emraan Hashmi ============
+  // ============ ❤️ ROMANTIC — Shah Rukh Khan, Ranbir Kapoor, Emraan Hashmi ============
+  {
+    id: "srk-tujhe-dekha",
+    vibe: "romantic",
+    type: "dialogue",
+    title: "Tujhe Dekha Toh Yeh Jaana",
+    character: "Shah Rukh Khan",
+    movie: "Dilwale Dulhania Le Jayenge",
+    quote: "Tujhe dekha toh yeh jaana sanam... pyaar hota hai deewana sanam!",
+    caption: "Classic DDLJ romantic magic for your special one.",
+    emoji: "🌹",
+    accent: "#be123c",
+    gif: createAuthoritativeGif(
+      "srk-tujhe-dekha-gif",
+      "Tujhe Dekha Toh Yeh Jaana",
+      "Shah Rukh Khan",
+      "https://media1.tenor.com/m/fS06Z3YA9AUAAAAC/best.gif"
+    ),
+  },
+  {
+    id: "srk-kuch-kuch-hota-hai",
+    vibe: "romantic",
+    type: "dialogue",
+    title: "Kuch Kuch Hota Hai",
+    character: "Shah Rukh Khan",
+    movie: "Kuch Kuch Hota Hai",
+    quote: "Kuch kuch hota hai... tum nahi samjhogi!",
+    caption: "Nostalgic Rahul romance for your best friend or partner.",
+    emoji: "💖",
+    accent: "#9f1239",
+    gif: createAuthoritativeGif(
+      "srk-kuch-kuch-gif",
+      "Kuch Kuch Hota Hai",
+      "Shah Rukh Khan",
+      "https://media1.tenor.com/m/zLl_lAvcVmMAAAAC/tu-jhoothi-main-makkaar-ranbir-kapoor.gif"
+    ),
+  },
+  {
+    id: "srk-palat",
+    vibe: "romantic",
+    type: "moment",
+    title: "Palat... Palat!",
+    character: "Shah Rukh Khan",
+    movie: "Dilwale Dulhania Le Jayenge",
+    quote: "Agar yeh tujhe pyaar karti hai toh yeh paltegi... Palat... Palat!",
+    caption: "The iconic DDLJ romantic suspense moment.",
+    emoji: "👑",
+    accent: "#881337",
+    gif: createAuthoritativeGif(
+      "srk-palat-gif",
+      "Palat Palat",
+      "Shah Rukh Khan",
+      "https://media1.tenor.com/m/Ttzb3gvSwgUAAAAC/ranbir-kapoor-ae-dil-hai-mushkil.gif"
+    ),
+  },
   {
     id: "rk-ae-dil-mushkil",
     vibe: "romantic",
@@ -535,7 +589,7 @@ export const SURPRISES_RAW: Surprise[] = [
     vibe: "romantic",
     type: "moment",
     title: "Brahmastra Astra of Love",
-    character: "Ranbir Kapoor & Alia Bhatt",
+    character: "Ranbir Kapoor",
     movie: "Brahmastra",
     quote: "Astra toh bahut hain... par pyaar ka sabse powerful!",
     caption: "Pyaar ka astra, tere liye.",
@@ -544,7 +598,7 @@ export const SURPRISES_RAW: Surprise[] = [
     gif: createAuthoritativeGif(
       "rk-brahmastra-gif",
       "Brahmastra Astra of Love",
-      "Ranbir Kapoor & Alia Bhatt",
+      "Ranbir Kapoor",
       "https://media1.tenor.com/m/w-WHGAe_CbQAAAAC/brahmastra-brahmastra-trailer.gif"
     ),
   },
@@ -589,7 +643,7 @@ export const SURPRISES_RAW: Surprise[] = [
     vibe: "romantic",
     type: "moment",
     title: "Once Upon A Time In Mumbai",
-    character: "Emraan Hashmi & Prachi Desai",
+    character: "Emraan Hashmi",
     movie: "Once Upon A Time In Mumbai",
     quote: "Once upon a time... ek postcard, ek yaad, ek tu.",
     caption: "Puraani Mumbai, nayi yaad.",
@@ -948,4 +1002,36 @@ export function getSurpriseById(id: string): Surprise | undefined {
 
 export function getVibeMeta(vibe: Vibe): VibeMeta {
   return VIBES.find((v) => v.id === vibe) ?? VIBES[3];
+}
+
+export interface CharacterMeta {
+  name: string;
+  avatar: string;
+  count: number;
+}
+
+export function getCharactersForVibe(vibe: Vibe): CharacterMeta[] {
+  if (vibe === "classic" || vibe === "rakhi" || vibe === "ganpati") return [];
+  const surprisesInVibe = SURPRISES.filter((s) => s.vibe === vibe);
+  const charMap = new Map<string, CharacterMeta>();
+
+  for (const s of surprisesInVibe) {
+    if (!s.character || s.character.includes("Special") || s.character.includes("Virtual Rakhi")) continue;
+    const existing = charMap.get(s.character);
+    if (existing) {
+      existing.count += 1;
+    } else {
+      charMap.set(s.character, {
+        name: s.character,
+        avatar: s.emoji || "✨",
+        count: 1,
+      });
+    }
+  }
+
+  return Array.from(charMap.values());
+}
+
+export function getSurprisesForCharacter(vibe: Vibe, characterName: string): Surprise[] {
+  return SURPRISES.filter((s) => s.vibe === vibe && s.character === characterName);
 }

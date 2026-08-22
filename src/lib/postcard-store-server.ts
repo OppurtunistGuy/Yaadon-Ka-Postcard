@@ -1,3 +1,4 @@
+import zlib from "zlib";
 import { db } from "./db";
 import { generateOpaqueId } from "./security";
 
@@ -31,6 +32,10 @@ if (!globalForPostcards.postcardCache) {
 
 const postcardCache = globalForPostcards.postcardCache;
 
+/**
+ * Encodes payload into a compact, self-contained compressed token.
+ * Uses deflateRaw binary compression + base64url for ultra-short URL tokens.
+ */
 export function encodeSelfContainedToken(payload: PostcardPayload): string {
   const compact = {
     t: payload.themeId || "classic",
@@ -47,15 +52,54 @@ export function encodeSelfContainedToken(payload: PostcardPayload): string {
     mt: payload.musicTitle || null,
   };
   const json = JSON.stringify(compact);
-  const base64 = Buffer.from(json, "utf-8").toString("base64url");
-  return `P_${base64}`;
+  try {
+    const compressed = zlib.deflateRawSync(Buffer.from(json, "utf-8"));
+    const base64url = compressed.toString("base64url");
+    return `p_${base64url}`;
+  } catch {
+    const base64 = Buffer.from(json, "utf-8").toString("base64url");
+    return `P_${base64}`;
+  }
 }
 
+/**
+ * Decodes compressed (`p_...`), uncompressed (`P_...`), or legacy raw tokens into a full PostcardPayload object.
+ */
 export function decodeSelfContainedToken(rawToken: string): PostcardPayload | null {
   if (!rawToken) return null;
   const cleanToken = decodeURIComponent(rawToken).trim();
 
-  // Mode 1: P_ token
+  // Mode 1: Compressed binary token (p_)
+  if (cleanToken.startsWith("p_")) {
+    try {
+      const rawStr = cleanToken.slice(2);
+      const buf = Buffer.from(rawStr, "base64url");
+      const decompressed = zlib.inflateRawSync(buf).toString("utf-8");
+      const d = JSON.parse(decompressed);
+      if (d && (d.r || d.receiverName) && (d.i || d.surpriseId)) {
+        return {
+          token: cleanToken,
+          themeId: d.t || d.themeId || "classic",
+          receiverName: d.r || d.receiverName,
+          city: d.c || d.city || "",
+          relationship: d.l || d.relationship || "",
+          senderName: d.s || d.senderName || "",
+          senderGender: d.g || d.senderGender || "male",
+          vibe: d.v || d.vibe || "classic",
+          surpriseId: d.i || d.surpriseId,
+          message: d.m || d.message || "",
+          musicUrl: d.mu || d.musicUrl || null,
+          musicPlatform: d.mp || d.musicPlatform || null,
+          musicTitle: d.mt || d.musicTitle || null,
+          createdAt: new Date(),
+        };
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  // Mode 2: Legacy uncompressed token (P_)
   if (cleanToken.startsWith("P_")) {
     try {
       const rawStr = cleanToken.slice(2);
@@ -84,7 +128,7 @@ export function decodeSelfContainedToken(rawToken: string): PostcardPayload | nu
     }
   }
 
-  // Mode 2: Raw base64url JSON fallback (legacy or external token format)
+  // Mode 3: Raw base64url JSON fallback
   try {
     const json = Buffer.from(cleanToken, "base64url").toString("utf-8");
     const d = JSON.parse(json);
@@ -114,15 +158,12 @@ export function decodeSelfContainedToken(rawToken: string): PostcardPayload | nu
 }
 
 export async function createPostcard(payload: PostcardPayload): Promise<{ token: string }> {
-  // Always create self-contained token containing complete postcard payload
-  const selfContainedToken = encodeSelfContainedToken(payload);
-
-  // Cache in server memory map
-  postcardCache.set(selfContainedToken, { ...payload, token: selfContainedToken });
+  // Generate a clean, short 12-character token for DB insertion
+  const shortToken = `c_${generateOpaqueId(10)}`;
 
   try {
     const dataToInsert: any = {
-      token: selfContainedToken,
+      token: shortToken,
       themeId: payload.themeId || "classic",
       receiverName: payload.receiverName,
       city: payload.city,
@@ -139,11 +180,15 @@ export async function createPostcard(payload: PostcardPayload): Promise<{ token:
     await (db.postcard as any).create({
       data: dataToInsert,
     });
+    // Cache in server memory map
+    postcardCache.set(shortToken, { ...payload, token: shortToken });
+    return { token: shortToken };
   } catch (e) {
-    console.warn("[createPostcard] DB save notice (self-contained token fallback active):", e);
+    console.warn("[createPostcard] DB save notice (compressed token fallback active):", e);
+    const selfContainedToken = encodeSelfContainedToken(payload);
+    postcardCache.set(selfContainedToken, { ...payload, token: selfContainedToken });
+    return { token: selfContainedToken };
   }
-
-  return { token: selfContainedToken };
 }
 
 export async function fetchPostcardByToken(rawToken: string): Promise<PostcardPayload | null> {
@@ -185,7 +230,7 @@ export async function fetchPostcardByToken(rawToken: string): Promise<PostcardPa
     console.warn("[fetchPostcardByToken] DB lookup notice:", e);
   }
 
-  // 3. Decode self-contained token
+  // 3. Decode compressed or self-contained token
   const decoded = decodeSelfContainedToken(token);
   if (decoded) {
     postcardCache.set(token, decoded);

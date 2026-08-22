@@ -93,13 +93,13 @@ export function ShareScreen() {
                   className="font-serif-vintage text-[10px] uppercase tracking-[0.2em]"
                   style={{ color: "var(--ink-soft)" }}
                 >
-                  Postcard Token
+                  Postcard Status
                 </div>
                 <div
-                  className="font-mono font-bold text-lg tracking-widest mt-1"
+                  className="font-serif-vintage font-bold text-sm sm:text-base tracking-wide mt-0.5"
                   style={{ color: "var(--burgundy)" }}
                 >
-                  {generatedToken ?? "—"}
+                  Postcard ready to share
                 </div>
               </div>
               <PostageStamp accent="#b4351f" rotate={-5}>

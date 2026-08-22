@@ -4,6 +4,7 @@ import { SURPRISES } from "@/lib/surprises";
 import { FESTIVAL_THEMES } from "@/lib/festival-themes";
 import { sanitizeText, parseMusicUrl, generateOpaqueId, checkRateLimit } from "@/lib/security";
 import { createPostcard } from "@/lib/postcard-store-server";
+import { validateName, validateCityText, validateRelationshipText } from "@/lib/name-validation";
 
 function getValidSurpriseIds(): Set<string> {
   return new Set(SURPRISES.map((s) => s.id));
@@ -40,24 +41,28 @@ export async function POST(req: NextRequest) {
     const cleanThemeId = themeId && validThemeIds.includes(themeId) ? themeId : "classic";
     const cleanVibe = vibe || (cleanThemeId === "rakhi" ? "rakhi" : cleanThemeId === "ganpati" ? "ganpati" : "classic");
 
-    // Validate required fields
+    // Validate and normalize required fields
     const errors: string[] = [];
-    if (!receiverName || typeof receiverName !== "string" || receiverName.trim().length < 1)
-      errors.push("Receiver name is required");
-    if (!city || typeof city !== "string" || city.trim().length < 1)
-      errors.push("City is required");
-    if (!relationship || typeof relationship !== "string" || relationship.trim().length < 1)
-      errors.push("Relationship is required");
-    if (!senderName || typeof senderName !== "string" || senderName.trim().length < 1)
-      errors.push("Sender name is required");
+
+    const rRes = validateName(receiverName ?? "", { minLen: 2, maxLen: 50 });
+    if (!rRes.valid) errors.push(rRes.error || "Please enter a valid receiver name.");
+
+    const cRes = validateCityText(city ?? "");
+    if (!cRes.valid) errors.push(cRes.error || "Please enter a valid city.");
+
+    const relRes = validateRelationshipText(relationship ?? "");
+    if (!relRes.valid) errors.push(relRes.error || "Please enter a valid relationship.");
+
+    const sRes = validateName(senderName ?? "", { minLen: 2, maxLen: 50 });
+    if (!sRes.valid) errors.push(sRes.error || "Please enter a valid sender name.");
+
     if (!message || typeof message !== "string" || message.trim().length < 3)
       errors.push("Message is too short");
 
     if (!cleanVibe || !ALLOWED_VIBES.includes(cleanVibe)) errors.push("Pick a valid vibe");
 
     const validSurprises = getValidSurpriseIds();
-    if (!surpriseId || !validSurprises.has(surpriseId as string))
-      errors.push("Pick a valid surprise");
+    const cleanSurpriseId = surpriseId && (validSurprises.has(surpriseId as string) || typeof surpriseId === "string") ? surpriseId : "cl-timeless";
 
     if (errors.length > 0) {
       return NextResponse.json({ ok: false, errors }, { status: 400 });
@@ -68,7 +73,7 @@ export async function POST(req: NextRequest) {
     let musicPlatform: string | null = null;
     let musicTitle: string | null = null;
 
-    if (musicUrl && (cleanVibe === "romantic" || cleanVibe === "action")) {
+    if (musicUrl) {
       const parsedMusic = parseMusicUrl(musicUrl);
       if (parsedMusic) {
         cleanMusicUrl = parsedMusic.url;
@@ -80,13 +85,13 @@ export async function POST(req: NextRequest) {
     // Sanitize user text
     const payloadData = {
       themeId: cleanThemeId,
-      receiverName: sanitizeText(receiverName).slice(0, 60),
-      city: sanitizeText(city).slice(0, 60),
-      relationship: sanitizeText(relationship).slice(0, 40),
-      senderName: sanitizeText(senderName).slice(0, 60),
+      receiverName: rRes.normalized,
+      city: cRes.normalized,
+      relationship: relRes.normalized,
+      senderName: sRes.normalized,
       senderGender: body.senderGender === "female" ? "female" : "male",
       vibe: cleanVibe,
-      surpriseId,
+      surpriseId: surpriseId || "cl-timeless",
       message: sanitizeText(message).slice(0, 1200),
       musicUrl: cleanMusicUrl,
       musicPlatform,
