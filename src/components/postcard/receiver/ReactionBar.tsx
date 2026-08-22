@@ -20,14 +20,27 @@ const REACTIONS = [
  */
 export function ReactionBar({
   token,
+  senderName,
   initialReaction,
 }: {
   token: string;
+  senderName?: string;
   initialReaction?: string | null;
 }) {
   const [selected, setSelected] = useState<string | null>(initialReaction ?? null);
   const [justPicked, setJustPicked] = useState<string | null>(null);
   const { play } = useSound();
+
+  const cleanSender = senderName?.trim() || "sender";
+
+  const reactions = [
+    { emoji: "😂", label: "Hansi", phrase: `Hansi waala reaction ${cleanSender} tak pahunch gaya! ✨` },
+    { emoji: "❤️", label: "Pyaar", phrase: `Dil se pyaara reaction ${cleanSender} tak pahunch gaya! ❤️` },
+    { emoji: "🥺", label: "Emotional", phrase: `Yeh meetha reaction ${cleanSender} tak pahunch gaya! 🥹` },
+    { emoji: "🔥", label: "Aag", phrase: `Kadak reaction ${cleanSender} tak pahunch gaya! 🔥` },
+    { emoji: "👏", label: "Wah!", phrase: `Kamaal ka reaction ${cleanSender} tak pahunch gaya! 👏` },
+    { emoji: "🤗", label: "Jadoo ki jappi", phrase: `Warm jadoo ki jappi ${cleanSender} tak pahunch gayi! 🤗` },
+  ];
 
   async function handleReact(emoji: string) {
     const next = selected === emoji ? null : emoji;
@@ -54,13 +67,13 @@ export function ReactionBar({
           className="font-serif-vintage text-[9px] uppercase tracking-[0.2em]"
           style={{ color: "var(--ink-soft)" }}
         >
-          Sender ko bolo
+          {cleanSender.toUpperCase()} KO BOLO
         </span>
         <div className="h-px w-10" style={{ background: "var(--border)" }} />
       </div>
 
       <div className="flex items-center justify-center gap-2 flex-wrap">
-        {REACTIONS.map((r) => {
+        {reactions.map((r) => {
           const active = selected === r.emoji;
           return (
             <button
@@ -115,7 +128,7 @@ export function ReactionBar({
             className="font-handwritten text-xs text-center mt-2"
             style={{ color: "var(--ink-soft)" }}
           >
-            {REACTIONS.find((r) => r.emoji === selected)?.phrase}
+            {reactions.find((r) => r.emoji === selected)?.phrase}
           </motion.p>
         )}
       </AnimatePresence>

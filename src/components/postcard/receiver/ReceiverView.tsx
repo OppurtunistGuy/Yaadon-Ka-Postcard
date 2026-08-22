@@ -208,7 +208,7 @@ export function ReceiverView({
 
                 {/* Reaction bar for quick feedback */}
                 <div className="w-full mt-6">
-                  <ReactionBar token={token} initialReaction={initialReaction} />
+                  <ReactionBar token={token} senderName={data.senderName} initialReaction={initialReaction} />
                 </div>
               </motion.div>
             )}

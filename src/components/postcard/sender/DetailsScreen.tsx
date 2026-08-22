@@ -354,7 +354,7 @@ export function DetailsScreen() {
               <div>
                 <label className="block mb-1">
                   <span className="font-serif-vintage text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 text-[var(--burgundy)]">
-                    <span>✍️</span> Your Name (With love,)
+                    <span>✍️</span> Your Name
                   </span>
                 </label>
 
