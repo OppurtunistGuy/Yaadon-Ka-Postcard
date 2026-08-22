@@ -121,7 +121,7 @@ export function MessageScreen() {
                 onChange={(e) => updateDraft({ message: e.target.value })}
                 rows={6}
                 maxLength={500}
-                placeholder="Dear Varsha, aaj suddenly tera khayal aaya aur socha ek postcard bhej du..."
+                placeholder={`Dear ${draft.receiverName || "Friend"}, write your message here...`}
                 className="w-full font-handwritten text-base px-3 py-3 rounded-md outline-none resize-y min-h-[150px] transition-all focus:shadow-md ruled-lines leading-[32px]"
                 style={{
                   backgroundColor: "rgba(255, 250, 235, 0.6)",

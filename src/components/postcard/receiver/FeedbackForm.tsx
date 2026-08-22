@@ -156,7 +156,7 @@ export function FeedbackForm({
                     type="text"
                     value={nameInput}
                     onChange={(e) => setNameInput(e.target.value)}
-                    placeholder="Your Name (e.g. Varsha Patil)"
+                    placeholder="Your Name (e.g. Rahul Sharma)"
                     maxLength={50}
                     className="w-full text-xs font-handwritten px-3 py-2 rounded-md outline-none border border-[var(--border)] bg-[#fffceb] text-[var(--ink)]"
                   />

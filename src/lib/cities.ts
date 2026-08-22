@@ -4,11 +4,11 @@ export interface CityItem {
   country: string;
 }
 
-export const POPULAR_CITIES: CityItem[] = [
-  { name: "Pune", state: "Maharashtra", country: "India" },
+export const CURATED_MAJOR_CITIES: CityItem[] = [
   { name: "Mumbai", state: "Maharashtra", country: "India" },
   { name: "Delhi", state: "Delhi", country: "India" },
   { name: "Bengaluru", state: "Karnataka", country: "India" },
+  { name: "Pune", state: "Maharashtra", country: "India" },
   { name: "Hyderabad", state: "Telangana", country: "India" },
   { name: "Chennai", state: "Tamil Nadu", country: "India" },
   { name: "Kolkata", state: "West Bengal", country: "India" },
@@ -16,9 +16,17 @@ export const POPULAR_CITIES: CityItem[] = [
   { name: "Jaipur", state: "Rajasthan", country: "India" },
   { name: "Surat", state: "Gujarat", country: "India" },
   { name: "Lucknow", state: "Uttar Pradesh", country: "India" },
-  { name: "Kanpur", state: "Uttar Pradesh", country: "India" },
-  { name: "Nagpur", state: "Maharashtra", country: "India" },
   { name: "Indore", state: "Madhya Pradesh", country: "India" },
+  { name: "Nagpur", state: "Maharashtra", country: "India" },
+  { name: "Chandigarh", state: "Chandigarh", country: "India" },
+  { name: "Gurugram", state: "Haryana", country: "India" },
+  { name: "Noida", state: "Uttar Pradesh", country: "India" },
+  { name: "Panaji", state: "Goa", country: "India" },
+];
+
+export const POPULAR_CITIES: CityItem[] = [
+  ...CURATED_MAJOR_CITIES,
+  { name: "Kanpur", state: "Uttar Pradesh", country: "India" },
   { name: "Thane", state: "Maharashtra", country: "India" },
   { name: "Bhopal", state: "Madhya Pradesh", country: "India" },
   { name: "Visakhapatnam", state: "Andhra Pradesh", country: "India" },
@@ -50,16 +58,12 @@ export const POPULAR_CITIES: CityItem[] = [
   { name: "Raipur", state: "Chhattisgarh", country: "India" },
   { name: "Kota", state: "Rajasthan", country: "India" },
   { name: "Guwahati", state: "Assam", country: "India" },
-  { name: "Chandigarh", state: "Chandigarh", country: "India" },
   { name: "Solapur", state: "Maharashtra", country: "India" },
   { name: "Hubli-Dharwad", state: "Karnataka", country: "India" },
   { name: "Bareilly", state: "Uttar Pradesh", country: "India" },
   { name: "Mysore", state: "Karnataka", country: "India" },
-  { name: "Gurugram", state: "Haryana", country: "India" },
-  { name: "Noida", state: "Uttar Pradesh", country: "India" },
   { name: "Dehradun", state: "Uttarakhand", country: "India" },
   { name: "Shimla", state: "Himachal Pradesh", country: "India" },
-  { name: "Panaji", state: "Goa", country: "India" },
   { name: "London", state: "England", country: "United Kingdom" },
   { name: "New York", state: "NY", country: "USA" },
   { name: "Dubai", state: "Dubai", country: "UAE" },
@@ -68,7 +72,7 @@ export const POPULAR_CITIES: CityItem[] = [
 ];
 
 export function searchCities(query: string): CityItem[] {
-  if (!query || !query.trim()) return POPULAR_CITIES;
+  if (!query || !query.trim()) return CURATED_MAJOR_CITIES;
   const q = query.toLowerCase().trim();
   return POPULAR_CITIES.filter(
     (c) =>

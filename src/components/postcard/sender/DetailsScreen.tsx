@@ -20,12 +20,9 @@ const RELATIONSHIP_OPTIONS = [
   "Spouse",
   "Brother",
   "Sister",
-  "Cousin",
   "Parent",
   "Child",
   "Colleague",
-  "Mentor",
-  "Teacher",
   "Other",
 ];
 
@@ -248,7 +245,7 @@ export function DetailsScreen() {
                     updateDraft({ receiverName: e.target.value });
                     if (receiverError) setReceiverError(undefined);
                   }}
-                  placeholder="e.g. Varsha Patil"
+                  placeholder="e.g. Rahul Sharma"
                   maxLength={50}
                   className={cn(
                     "field-vintage w-full font-handwritten text-base px-3 py-2 rounded-md outline-none border bg-[#fffceb]",
@@ -277,30 +274,32 @@ export function DetailsScreen() {
                 <label className="block font-serif-vintage text-xs font-bold uppercase tracking-wider text-[var(--burgundy)] mb-1">
                   Relationship (Kya lagte hain aapke?)
                 </label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-2">
-                  {RELATIONSHIP_OPTIONS.map((opt) => {
-                    const sel = draft.relationship === opt;
-                    return (
-                      <button
-                        key={opt}
-                        type="button"
-                        onClick={() => {
-                          updateDraft({ relationship: opt });
-                          setCustomRelationship("");
-                          if (relationshipError) setRelationshipError(undefined);
-                        }}
-                        className={cn(
-                          "py-2 px-3 rounded-md text-xs font-serif-vintage transition border text-center cursor-pointer",
-                          sel
-                            ? "bg-amber-100 border-[var(--burgundy)] border-2 font-bold shadow-2xs"
-                            : "bg-amber-50/60 border-amber-900/15 hover:bg-amber-100/40"
-                        )}
-                      >
-                        {opt}
-                      </button>
-                    );
-                  })}
-                </div>
+                <select
+                  value={selectedRelationship}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === "Other") {
+                      updateDraft({ relationship: "Other" });
+                      setCustomRelationship("");
+                    } else {
+                      updateDraft({ relationship: val });
+                      setRelationshipError(undefined);
+                    }
+                  }}
+                  className={cn(
+                    "field-vintage w-full font-handwritten text-base px-3 py-2 rounded-md outline-none border bg-[#fffceb] cursor-pointer",
+                    relationshipError ? "border-red-600 focus:ring-1 focus:ring-red-600" : "border-[var(--border)]"
+                  )}
+                >
+                  <option value="" disabled>
+                    Select Relationship...
+                  </option>
+                  {RELATIONSHIP_OPTIONS.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
 
                 {selectedRelationship === "Other" && (
                   <input
@@ -312,8 +311,8 @@ export function DetailsScreen() {
                       if (relationshipError) setRelationshipError(undefined);
                     }}
                     placeholder="Describe relationship (e.g. Childhood Bestie)"
-                    maxLength={50}
-                    className="field-vintage w-full font-handwritten text-sm px-3 py-2 rounded-md outline-none border border-[var(--border)] bg-[#fffceb] mt-1"
+                    maxLength={30}
+                    className="field-vintage w-full font-handwritten text-sm px-3 py-2 rounded-md outline-none border border-[var(--border)] bg-[#fffceb] mt-2"
                   />
                 )}
                 {relationshipError && <p className="text-xs text-red-600 font-sans mt-1">{relationshipError}</p>}
@@ -330,7 +329,7 @@ export function DetailsScreen() {
                     updateDraft({ senderName: e.target.value });
                     if (senderError) setSenderError(undefined);
                   }}
-                  placeholder="e.g. Vikas Patil"
+                  placeholder="e.g. Your name"
                   maxLength={50}
                   className={cn(
                     "field-vintage w-full font-handwritten text-base px-3 py-2 rounded-md outline-none border bg-[#fffceb]",
