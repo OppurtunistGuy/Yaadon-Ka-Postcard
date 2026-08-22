@@ -22,7 +22,7 @@ export interface PostcardData {
   senderName: string;
   senderGender?: "male" | "female" | null;
   message: string;
-  surprise: Surprise;
+  surprise?: Surprise | null;
   vibeLabel: string;
   vibeEmoji: string;
   musicUrl?: string | null;
@@ -242,7 +242,7 @@ export const PostcardCard = forwardRef<
           </div>
 
           {/* ===== Surprise section (Hidden until revealed) ===== */}
-          {!isPlain && Boolean(data.surprise) && (
+          {!isPlain && data.surprise && (
             <SurpriseSlot
               surprise={data.surprise}
               themeAccent={theme.accentColor}

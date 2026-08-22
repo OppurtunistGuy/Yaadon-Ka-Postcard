@@ -90,11 +90,13 @@ export function SurpriseScreen() {
   // Festival Surprises for Rakhi / Ganpati
   const festivalSurprises = getSurprisesForTheme(currentThemeId, draft.vibe);
 
-  // Can user proceed?
-  const canContinue =
-    isClassicMode
-      ? isJustMeMode || Boolean(draft.surpriseId)
-      : Boolean(draft.surpriseId);
+  function handleRemoveAttachment() {
+    updateDraft({ surpriseId: null });
+    setSelectedCharacter(null);
+  }
+
+  // Can user proceed? Sender can proceed anytime (with or without surprise)
+  const canContinue = true;
 
   return (
     <PaperBackground className="min-h-screen flex flex-col justify-between selection:bg-amber-900/10">
@@ -186,6 +188,18 @@ export function SurpriseScreen() {
                   <p className="font-handwritten text-xs text-[var(--ink-soft)] mb-3">
                     Showing characters for <span className="font-bold text-[var(--burgundy)] font-serif-vintage uppercase">{currentVibe}</span> vibe — click to select ONE character
                   </p>
+
+                  {draft.surpriseId && (
+                    <div className="mb-3">
+                      <button
+                        type="button"
+                        onClick={handleRemoveAttachment}
+                        className="text-xs font-serif-vintage font-bold text-amber-900 bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-md border border-amber-900/20 inline-flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                      >
+                        <span>❌ Remove attachment / Send Plain Postcard</span>
+                      </button>
+                    </div>
+                  )}
 
                   {/* Horizontal 3-Column Celebrities Grid */}
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -282,6 +296,18 @@ export function SurpriseScreen() {
                   Choose a virtual rakhi thread to attach to your postcard
                 </p>
               </div>
+
+              {draft.surpriseId && (
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={handleRemoveAttachment}
+                    className="text-xs font-serif-vintage font-bold text-rose-950 bg-rose-100 hover:bg-rose-200 px-3 py-1.5 rounded-md border border-rose-300 inline-flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                  >
+                    <span>❌ Remove Rakhi attachment / Send Plain Postcard</span>
+                  </button>
+                </div>
+              )}
 
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
                 {festivalSurprises.map((s) => {

@@ -24,7 +24,7 @@ export function ReceiverView({
   onReveal: () => void;
   onGoHome: () => void;
 }) {
-  const [revealed, setRevealed] = useState(false);
+  const [revealed, setRevealed] = useState(!data.surprise);
   const [isClaimed, setIsClaimed] = useState(false);
   const [zoomIndex, setZoomIndex] = useState(1); // 1.0 (100%) by default
   const [pan, setPan] = useState({ x: 0, y: 0 });

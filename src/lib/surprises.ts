@@ -991,13 +991,14 @@ export function getSurprisesForTheme(themeId?: string | null, vibe?: Vibe | null
   return getSurprisesForVibe(vibe || "classic");
 }
 
-export function getSurpriseById(id: string): Surprise | undefined {
+export function getSurpriseById(id?: string | null): Surprise | undefined {
+  if (!id || id === "none") return undefined;
   const s = SURPRISES.find((item) => item.id === id);
-  const found = s || SURPRISES[0];
-  if (found && !found.gif && found.gifUrl) {
-    found.gif = createAuthoritativeGif(found.id, found.title, found.character, found.gifUrl);
+  if (!s) return undefined;
+  if (!s.gif && s.gifUrl) {
+    s.gif = createAuthoritativeGif(s.id, s.title, s.character, s.gifUrl);
   }
-  return found;
+  return s;
 }
 
 export function getVibeMeta(vibe: Vibe): VibeMeta {

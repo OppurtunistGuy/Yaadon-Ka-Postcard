@@ -117,51 +117,51 @@ export function PreviewScreen() {
               </p>
             </div>
 
-            {surprise && (
-              <PostcardCard
-                data={{
-                  themeId: draft.themeId,
-                  receiverName: draft.receiverName,
-                  city: draft.city,
-                  relationship: draft.relationship,
-                  senderName: draft.senderName,
-                  senderGender: draft.senderGender,
-                  message: draft.message,
-                  surprise,
-                  vibeLabel: vibeMeta.label,
-                  vibeEmoji: vibeMeta.emoji,
-                  musicUrl: draft.musicUrl,
-                  musicPlatform: draft.musicPlatform,
-                  musicTitle: draft.musicTitle,
-                }}
-                revealState={revealed ? "revealed" : "hidden"}
-                onReveal={() => {
-                  setRevealed(true);
-                  play("reveal");
-                }}
-              />
-            )}
+            <PostcardCard
+              data={{
+                themeId: draft.themeId,
+                receiverName: draft.receiverName,
+                city: draft.city,
+                relationship: draft.relationship,
+                senderName: draft.senderName,
+                senderGender: draft.senderGender,
+                message: draft.message,
+                surprise: surprise || null,
+                vibeLabel: vibeMeta.label,
+                vibeEmoji: vibeMeta.emoji,
+                musicUrl: draft.musicUrl,
+                musicPlatform: draft.musicPlatform,
+                musicTitle: draft.musicTitle,
+              }}
+              revealState={revealed ? "revealed" : "hidden"}
+              onReveal={() => {
+                setRevealed(true);
+                play("reveal");
+              }}
+            />
 
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-              {revealed ? (
-                <button
-                  onClick={() => {
-                    setRevealed(false);
-                    play("paper");
-                  }}
-                  className="btn-pastel text-xs font-medium px-3 py-1.5 rounded"
-                >
-                  Re-hide surprise
-                </button>
-              ) : (
-                <span
-                  className="font-handwritten text-xs animate-nudge"
-                  style={{ color: "var(--ink-soft)" }}
-                >
-                  👆 tap the blurred area to peek at your surprise
-                </span>
-              )}
-            </div>
+            {surprise && (
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                {revealed ? (
+                  <button
+                    onClick={() => {
+                      setRevealed(false);
+                      play("paper");
+                    }}
+                    className="btn-pastel text-xs font-medium px-3 py-1.5 rounded cursor-pointer"
+                  >
+                    Re-hide surprise
+                  </button>
+                ) : (
+                  <span
+                    className="font-handwritten text-xs animate-nudge"
+                    style={{ color: "var(--ink-soft)" }}
+                  >
+                    👆 tap the blurred area to peek at your surprise
+                  </span>
+                )}
+              </div>
+            )}
 
             <motion.div
               initial={{ opacity: 0 }}

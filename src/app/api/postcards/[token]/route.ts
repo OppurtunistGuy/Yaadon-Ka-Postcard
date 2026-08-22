@@ -47,13 +47,8 @@ export async function GET(
       );
     }
 
-    const surprise = getSurpriseById(card.surpriseId);
-    if (!surprise) {
-      return NextResponse.json(
-        { ok: false, error: "Surprise missing for this postcard." },
-        { status: 404 }
-      );
-    }
+    const hasSurprise = Boolean(card.surpriseId && card.surpriseId !== "none");
+    const surprise = hasSurprise ? getSurpriseById(card.surpriseId) : null;
 
     return NextResponse.json({
       ok: true,
@@ -67,7 +62,7 @@ export async function GET(
         senderGender: card.senderGender || "male",
         vibe: card.vibe,
         vibeMeta: getVibeMeta(card.vibe as "jolly" | "romantic" | "action" | "classic"),
-        surpriseId: card.surpriseId,
+        surpriseId: card.surpriseId || null,
         message: sanitizeText(card.message),
         musicUrl: card.musicUrl || null,
         musicPlatform: card.musicPlatform || null,
@@ -81,22 +76,24 @@ export async function GET(
         publicName: card.publicName,
         isPublic: card.isPublic ?? false,
       },
-      surprise: {
-        id: surprise.id,
-        vibe: surprise.vibe,
-        type: surprise.type,
-        title: surprise.title,
-        character: surprise.character,
-        movie: surprise.movie,
-        quote: surprise.quote,
-        caption: surprise.caption,
-        emoji: surprise.emoji,
-        gifUrl: surprise.gifUrl,
-        gif: surprise.gif,
-        accent: surprise.accent,
-        rakhiId: surprise.rakhiId,
-        ganpatiImgId: surprise.ganpatiImgId,
-      },
+      surprise: surprise
+        ? {
+            id: surprise.id,
+            vibe: surprise.vibe,
+            type: surprise.type,
+            title: surprise.title,
+            character: surprise.character,
+            movie: surprise.movie,
+            quote: surprise.quote,
+            caption: surprise.caption,
+            emoji: surprise.emoji,
+            gifUrl: surprise.gifUrl,
+            gif: surprise.gif,
+            accent: surprise.accent,
+            rakhiId: surprise.rakhiId,
+            ganpatiImgId: surprise.ganpatiImgId,
+          }
+        : null,
     });
   } catch (err) {
     console.error("[GET /api/postcards/[token]]", err);
