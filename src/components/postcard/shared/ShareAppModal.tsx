@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Copy, Check, MessageCircle, Share2, Sparkles, X, Heart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { copyToClipboard } from "@/lib/clipboard";
 import { cn } from "@/lib/utils";
 
 export function getAppShareUrl(): string {
@@ -30,15 +31,15 @@ export function ShareAppModal({ isOpen, onClose }: ShareAppModalProps) {
   const fullText = `${APP_SHARE_MESSAGE} ${appUrl}`;
 
   async function handleCopyAppUrl() {
-    try {
-      await navigator.clipboard.writeText(appUrl);
+    const success = await copyToClipboard(appUrl);
+    if (success) {
       setCopied(true);
       toast({
         title: "App Link Copied! 📋",
         description: "Yaadon Ka Postcard app link copied to clipboard.",
       });
       setTimeout(() => setCopied(false), 2000);
-    } catch {
+    } else {
       toast({ title: "Could not copy link", variant: "destructive" });
     }
   }
@@ -187,15 +188,15 @@ export function ShareAppCard() {
   const fullText = `${APP_SHARE_MESSAGE} ${appUrl}`;
 
   async function handleCopyAppUrl() {
-    try {
-      await navigator.clipboard.writeText(appUrl);
+    const success = await copyToClipboard(appUrl);
+    if (success) {
       setCopied(true);
       toast({
         title: "App Link Copied! 📋",
         description: "Yaadon Ka Postcard app link copied to clipboard.",
       });
       setTimeout(() => setCopied(false), 2000);
-    } catch {
+    } else {
       toast({ title: "Could not copy link", variant: "destructive" });
     }
   }

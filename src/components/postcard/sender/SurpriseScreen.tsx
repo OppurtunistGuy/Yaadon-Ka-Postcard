@@ -167,14 +167,14 @@ export function SurpriseScreen() {
                 </div>
               </div>
 
-              {/* Just Me Notice */}
+              {/* Classic Just Me Notice */}
               {isJustMeMode && (
                 <div className="p-4 rounded-md border border-amber-900/20 bg-[#fffceb] text-center">
-                  <p className="font-serif-vintage text-xs font-semibold text-[var(--burgundy)]">
-                    ✨ &ldquo;Just Me&rdquo; mode selected — No celebrity attachments.
+                  <p className="font-serif-vintage text-xs sm:text-sm font-bold text-[var(--burgundy)]">
+                    ✨ Classic Mode Selected &mdash; No GIF Attachments
                   </p>
-                  <p className="font-handwritten text-xs text-[var(--ink-soft)] mt-0.5">
-                    Your postcard will be sent cleanly with your personal message as the hero.
+                  <p className="font-handwritten text-xs sm:text-sm text-[var(--ink-soft)] mt-0.5">
+                    Your postcard will be sent cleanly with your personal handwritten message as the hero.
                   </p>
                 </div>
               )}

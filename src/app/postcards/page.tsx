@@ -18,6 +18,7 @@ import {
 import { PaperBackground } from "@/components/postcard/shared/PaperBackground";
 import { useSentPostcards } from "@/hooks/use-sent-postcards";
 import { useToast } from "@/hooks/use-toast";
+import { copyToClipboard } from "@/lib/clipboard";
 
 interface SenderPostcard {
   token: string;
@@ -83,16 +84,24 @@ export default function MyPostcardsDashboardPage() {
     loadSenderDashboard();
   }, [records]);
 
-  function handleCopyLink(token: string) {
+  async function handleCopyLink(token: string) {
     const origin = typeof window !== "undefined" ? window.location.origin : "";
     const url = `${origin}/p/${token}`;
-    navigator.clipboard.writeText(url);
-    setCopiedToken(token);
-    toast({
-      title: "Link copied!",
-      description: "Postcard link copied to clipboard.",
-    });
-    setTimeout(() => setCopiedToken(null), 2000);
+    const success = await copyToClipboard(url);
+    if (success) {
+      setCopiedToken(token);
+      toast({
+        title: "Link copied!",
+        description: "Postcard link copied to clipboard.",
+      });
+      setTimeout(() => setCopiedToken(null), 2000);
+    } else {
+      toast({
+        title: "Copy failed",
+        description: "Could not copy postcard link.",
+        variant: "destructive",
+      });
+    }
   }
 
   return (

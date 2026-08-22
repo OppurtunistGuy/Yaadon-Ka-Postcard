@@ -233,24 +233,26 @@ export function ReceiverFlow({
     );
   }
 
-  if (!postcard || !surprise) return null;
+  if (!postcard) return null;
 
-  const surpriseTyped: Surprise = {
-    id: surprise.id,
-    vibe: surprise.vibe as Vibe,
-    type: surprise.type as Surprise["type"],
-    title: surprise.title,
-    character: surprise.character,
-    movie: surprise.movie,
-    quote: surprise.quote,
-    caption: surprise.caption,
-    emoji: surprise.emoji,
-    gifUrl: surprise.gifUrl,
-    gif: surprise.gifUrl ? normalizeGif(surprise.gifUrl, surprise.title) : undefined,
-    accent: surprise.accent,
-    rakhiId: surprise.rakhiId,
-    ganpatiImgId: surprise.ganpatiImgId,
-  };
+  const surpriseTyped: Surprise | null = surprise
+    ? {
+        id: surprise.id,
+        vibe: surprise.vibe as Vibe,
+        type: surprise.type as Surprise["type"],
+        title: surprise.title,
+        character: surprise.character,
+        movie: surprise.movie,
+        quote: surprise.quote,
+        caption: surprise.caption,
+        emoji: surprise.emoji,
+        gifUrl: surprise.gifUrl,
+        gif: surprise.gifUrl ? normalizeGif(surprise.gifUrl, surprise.title) : undefined,
+        accent: surprise.accent,
+        rakhiId: surprise.rakhiId,
+        ganpatiImgId: surprise.ganpatiImgId,
+      }
+    : null;
 
   return (
     <motion.div

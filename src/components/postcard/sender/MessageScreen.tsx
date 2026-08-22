@@ -79,15 +79,13 @@ export function MessageScreen() {
     }
   }
 
-  const isClassic = !draft.themeId || draft.themeId === "classic";
-
   return (
     <PaperBackground className="min-h-screen flex flex-col">
       <SenderHeader
-        step={isClassic ? 2 : 3}
-        total={isClassic ? 3 : 4}
+        step={3}
+        total={4}
         title="Write your message"
-        onBack={() => setStep(isClassic ? "details" : "surprise")}
+        onBack={() => setStep("surprise")}
       />
 
       <main className="flex-1 px-4 sm:px-8 py-6">
@@ -256,34 +254,32 @@ export function MessageScreen() {
               >
                 Live preview
               </div>
-              {surprise && (
-                <PostcardCard
-                  data={{
-                    themeId: draft.themeId,
-                    receiverName: draft.receiverName,
-                    city: draft.city,
-                    relationship: draft.relationship,
-                    senderName: draft.senderName,
-                    senderGender: draft.senderGender,
-                    message: draft.message,
-                    surprise,
-                    vibeLabel: vibeMeta.label,
-                    vibeEmoji: vibeMeta.emoji,
-                    musicUrl: draft.musicUrl,
-                    musicPlatform: draft.musicPlatform,
-                    musicTitle: draft.musicTitle,
-                  }}
-                  revealState="hidden"
-                  className="animate-float-soft"
-                />
-              )}
+              <PostcardCard
+                data={{
+                  themeId: draft.themeId,
+                  receiverName: draft.receiverName,
+                  city: draft.city,
+                  relationship: draft.relationship,
+                  senderName: draft.senderName,
+                  senderGender: draft.senderGender,
+                  message: draft.message,
+                  surprise: surprise || null,
+                  vibeLabel: vibeMeta.label,
+                  vibeEmoji: vibeMeta.emoji,
+                  musicUrl: draft.musicUrl,
+                  musicPlatform: draft.musicPlatform,
+                  musicTitle: draft.musicTitle,
+                }}
+                revealState="hidden"
+                className="animate-float-soft"
+              />
             </div>
           </motion.div>
 
           {/* nav */}
           <div className="mt-6 flex items-center justify-between">
             <button
-              onClick={() => setStep(isClassic ? "details" : "surprise")}
+              onClick={() => setStep("surprise")}
               className="text-sm font-medium hover:opacity-70 transition cursor-pointer"
               style={{ color: "var(--ink-soft)" }}
             >

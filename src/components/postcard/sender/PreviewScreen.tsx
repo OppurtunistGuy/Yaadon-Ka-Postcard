@@ -87,13 +87,11 @@ export function PreviewScreen() {
     }
   }
 
-  const isClassic = !draft.themeId || draft.themeId === "classic";
-
   return (
     <PaperBackground className="min-h-screen flex flex-col">
       <SenderHeader
-        step={isClassic ? 3 : 4}
-        total={isClassic ? 3 : 4}
+        step={4}
+        total={4}
         title="Preview & send"
         onBack={() => setStep("message")}
       />
@@ -116,7 +114,9 @@ export function PreviewScreen() {
                 className="font-handwritten text-sm"
                 style={{ color: "var(--ink-soft)" }}
               >
-                Surprise neeche locked hai &mdash; receiver tap karega to khulega.
+                {surprise
+                  ? "Surprise neeche locked hai — receiver tap karega to khulega."
+                  : "Clean classic postcard bina kisi GIF ke bhej rahe ho."}
               </p>
             </div>
 

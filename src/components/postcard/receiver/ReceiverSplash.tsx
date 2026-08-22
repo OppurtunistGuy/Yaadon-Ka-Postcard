@@ -71,14 +71,10 @@ export function ReceiverSplash({
           disabled={loading}
           whileHover={{ scale: loading ? 1 : 1.02 }}
           whileTap={{ scale: loading ? 1 : 0.98 }}
-          className="mt-8 btn-vintage font-serif-vintage font-bold px-8 py-3.5 rounded-md tracking-wide text-lg inline-flex items-center gap-2.5 shadow-md hover:shadow-lg transition cursor-pointer"
-          style={{
-            borderColor: theme.accentColor,
-            color: theme.accentColor,
-          }}
+          className="mt-8 btn-vintage font-serif-vintage font-bold px-8 py-3.5 rounded-md tracking-wide text-lg inline-flex items-center gap-2.5 shadow-md hover:shadow-lg transition cursor-pointer text-[#fff8e7]"
         >
-          <MailOpen className="w-5 h-5" />
-          <span>{loading ? "Opening..." : theme.openButtonText}</span>
+          <MailOpen className="w-5 h-5 text-[#fff8e7]" />
+          <span className="text-[#fff8e7]">{loading ? "Opening..." : theme.openButtonText}</span>
         </motion.button>
 
         {/* Small subtle text */}

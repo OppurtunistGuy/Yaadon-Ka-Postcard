@@ -11,6 +11,7 @@ import { PostageStamp } from "../shared/Stamp";
 import { DeliveryStatus } from "./DeliveryStatus";
 import { useSenderStore } from "@/lib/postcard-store";
 import { useToast } from "@/hooks/use-toast";
+import { copyToClipboard } from "@/lib/clipboard";
 import { ShareAppCard } from "../shared/ShareAppModal";
 
 export function ShareScreen() {
@@ -26,12 +27,12 @@ export function ShareScreen() {
   const shareText = `Tumhe ek postcard aaya hai! 💌 Khol yahan: ${shareUrl}`;
 
   async function handleCopy() {
-    try {
-      await navigator.clipboard.writeText(shareUrl);
+    const success = await copyToClipboard(shareUrl);
+    if (success) {
       setCopied(true);
       toast({ title: "Link copied!", description: "Ab paste kahi bhi kar sakte ho." });
       setTimeout(() => setCopied(false), 2000);
-    } catch {
+    } else {
       toast({ title: "Copy nahi hua", variant: "destructive" });
     }
   }

@@ -134,13 +134,7 @@ export function DetailsScreen() {
 
     if (hasError) return;
 
-    const isClassic = !draft.themeId || draft.themeId === "classic";
-    if (isClassic) {
-      updateDraft({ surpriseId: null, vibe: "classic" });
-      setStep("message");
-    } else {
-      setStep("surprise");
-    }
+    setStep("surprise");
   }
 
   function handleThemeSelect(newThemeId: FestivalThemeId) {
@@ -149,7 +143,7 @@ export function DetailsScreen() {
     if (newThemeId === "classic") {
       updateDraft({
         themeId: newThemeId,
-        vibe: "classic",
+        vibe: "jolly",
         surpriseId: null,
       });
     } else {
@@ -161,8 +155,6 @@ export function DetailsScreen() {
     }
   }
 
-  const isClassic = !draft.themeId || draft.themeId === "classic";
-
   const selectedRelationship = RELATIONSHIP_OPTIONS.includes(draft.relationship)
     ? draft.relationship
     : draft.relationship
@@ -171,7 +163,7 @@ export function DetailsScreen() {
 
   return (
     <PaperBackground className="min-h-screen flex flex-col selection:bg-amber-900/10">
-      <SenderHeader step={1} total={isClassic ? 3 : 4} title="Who's it for?" />
+      <SenderHeader step={1} total={4} title="Who's it for?" />
 
       <main className="flex-1 px-4 sm:px-8 py-6 box-border min-w-0">
         <div className="max-w-2xl mx-auto space-y-6">
@@ -355,7 +347,7 @@ export function DetailsScreen() {
               onClick={handleContinue}
               className="btn-vintage font-serif-vintage font-semibold px-6 py-2.5 rounded-md tracking-wide flex items-center gap-2 h-11 cursor-pointer shadow-sm hover:shadow text-sm"
             >
-              <span>{isClassic ? "Write your message" : "Choose Festival Surprise"}</span>
+              <span>{draft.themeId === "rakhi" || draft.themeId === "ganpati" ? "Choose Festival Surprise" : "Choose Surprise & Character"}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
