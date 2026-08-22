@@ -124,10 +124,10 @@ export async function POST(req: NextRequest) {
       ok: true,
       token,
     });
-  } catch (err) {
+  } catch (err: any) {
     console.error("[POST /api/postcards]", err);
     return NextResponse.json(
-      { ok: false, errors: ["Something went wrong. Try again."] },
+      { ok: false, errors: [err?.message || "Something went wrong. Try again."] },
       { status: 500 }
     );
   }
