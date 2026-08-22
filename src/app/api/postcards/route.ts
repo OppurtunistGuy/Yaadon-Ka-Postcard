@@ -56,8 +56,11 @@ export async function POST(req: NextRequest) {
     const sRes = validateName(senderName ?? "", { minLen: 2, maxLen: 50 });
     if (!sRes.valid) errors.push(sRes.error || "Please enter a valid sender name.");
 
-    if (!message || typeof message !== "string" || message.trim().length < 3)
+    if (!message || typeof message !== "string" || message.trim().length < 3) {
       errors.push("Message is too short");
+    } else if (message.trim().length > 500) {
+      errors.push("Message must be 500 characters or fewer for a postcard");
+    }
 
     if (!cleanVibe || !ALLOWED_VIBES.includes(cleanVibe)) errors.push("Pick a valid vibe");
 

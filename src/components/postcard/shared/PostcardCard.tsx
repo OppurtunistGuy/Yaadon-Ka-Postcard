@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef } from "react";
+import { forwardRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { PaperBackground } from "./PaperBackground";
 import { AirmailBorder } from "./AirmailBorder";
@@ -12,7 +12,7 @@ import type { Surprise } from "@/lib/surprises";
 import { getFestivalTheme } from "@/lib/festival-themes";
 import { getGanpatiImage } from "@/lib/festival-assets";
 import { validateHttpsUrl } from "@/lib/security";
-import { ExternalLink, Sparkles } from "lucide-react";
+import { ExternalLink, Sparkles, BookOpen } from "lucide-react";
 
 export interface PostcardData {
   themeId?: string | null;
@@ -46,9 +46,14 @@ export const PostcardCard = forwardRef<
   const isLocked = revealState === "hidden";
   const isRevealed = revealState === "revealed";
   const isPlain = revealState === "plain";
+  const [expandedMessage, setExpandedMessage] = useState(false);
 
   const theme = getFestivalTheme(data.themeId);
   const validatedMusicUrl = validateHttpsUrl(data.musicUrl);
+
+  const rawMessage = data.message || "Yahan tera message hoga — dil se likhi hui do baatein...";
+  const isLongMessage = rawMessage.length > 300;
+  const visibleMessage = isLongMessage && !expandedMessage ? `${rawMessage.slice(0, 280)}...` : rawMessage;
 
   return (
     <PaperBackground
@@ -146,9 +151,19 @@ export const PostcardCard = forwardRef<
                   className="font-handwritten text-base leading-relaxed whitespace-pre-wrap break-words"
                   style={{ color: "var(--ink)" }}
                 >
-                  {data.message ||
-                    "Yahan tera message hoga — dil se likhi hui do baatein..."}
+                  {visibleMessage}
                 </div>
+
+                {isLongMessage && (
+                  <button
+                    type="button"
+                    onClick={() => setExpandedMessage(!expandedMessage)}
+                    className="mt-1.5 inline-flex items-center gap-1 text-xs font-serif-vintage font-bold text-[var(--burgundy)] hover:underline cursor-pointer"
+                  >
+                    <BookOpen className="w-3 h-3 shrink-0" />
+                    <span>{expandedMessage ? "Show postcard message" : "Read full message"}</span>
+                  </button>
+                )}
               </div>
 
               <div className="pt-2 text-right">

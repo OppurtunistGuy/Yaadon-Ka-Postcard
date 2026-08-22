@@ -111,16 +111,16 @@ export function MessageScreen() {
                 className="font-handwritten text-sm mb-4"
                 style={{ color: "var(--ink-soft)" }}
               >
-                Jaise chitthi mein likhte the &mdash; thoda lamba, thoda honest.
+                Postcard pe thoda meetha aur crisp message likho (Ideal: ~350 chars, max: 500).
               </p>
 
               <textarea
                 value={draft.message}
                 onChange={(e) => updateDraft({ message: e.target.value })}
-                rows={7}
-                maxLength={1200}
-                placeholder="Dear Rahul, aaj suddenly tera khayal aaya aur socha likh hi du..."
-                className="w-full font-handwritten text-base px-3 py-3 rounded-md outline-none resize-y min-h-[170px] transition-all focus:shadow-md ruled-lines leading-[32px]"
+                rows={6}
+                maxLength={500}
+                placeholder="Dear Varsha, aaj suddenly tera khayal aaya aur socha ek postcard bhej du..."
+                className="w-full font-handwritten text-base px-3 py-3 rounded-md outline-none resize-y min-h-[150px] transition-all focus:shadow-md ruled-lines leading-[32px]"
                 style={{
                   backgroundColor: "rgba(255, 250, 235, 0.6)",
                   border: "1px solid var(--border)",
@@ -177,10 +177,12 @@ export function MessageScreen() {
 
               <div className="flex items-center justify-between mt-1.5 px-0.5">
                 <span
-                  className="text-[11px] font-mono"
-                  style={{ color: "var(--ink-soft)" }}
+                  className={`text-[11px] font-mono ${
+                    draft.message.length > 350 ? "text-amber-800 font-bold" : ""
+                  }`}
+                  style={{ color: draft.message.length <= 350 ? "var(--ink-soft)" : undefined }}
                 >
-                  {draft.message.length}/1200
+                  {draft.message.length}/500 {draft.message.length > 350 ? "(Soft target: 350)" : ""}
                 </span>
               </div>
 
