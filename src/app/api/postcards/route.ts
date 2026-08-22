@@ -8,7 +8,13 @@ import { validateName, validateCityText, validateRelationshipText } from "@/lib/
 import { trackEvent } from "@/lib/analytics";
 
 function getValidSurpriseIds(): Set<string> {
-  return new Set(SURPRISES.map((s) => s.id));
+  const ids = new Set<string>();
+  for (const s of SURPRISES) {
+    if (s.id) ids.add(s.id);
+    if (s.rakhiId) ids.add(s.rakhiId);
+    if (s.ganpatiImgId) ids.add(s.ganpatiImgId);
+  }
+  return ids;
 }
 
 const ALLOWED_VIBES = ["jolly", "romantic", "action", "classic", "rakhi", "ganpati"];
@@ -65,8 +71,13 @@ export async function POST(req: NextRequest) {
 
     if (!cleanVibe || !ALLOWED_VIBES.includes(cleanVibe)) errors.push("Pick a valid vibe");
 
+    const isFestivalTheme = cleanThemeId === "rakhi" || cleanThemeId === "ganpati";
+    if (isFestivalTheme && (!surpriseId || surpriseId === "none")) {
+      errors.push("Please select a festival surprise.");
+    }
+
     const validSurprises = getValidSurpriseIds();
-    const cleanSurpriseId = surpriseId && (validSurprises.has(surpriseId as string) || typeof surpriseId === "string") ? surpriseId : "cl-timeless";
+    const cleanSurpriseId = surpriseId && validSurprises.has(surpriseId as string) ? surpriseId : null;
 
     if (errors.length > 0) {
       return NextResponse.json({ ok: false, errors }, { status: 400 });
@@ -98,7 +109,7 @@ export async function POST(req: NextRequest) {
       senderName: sRes.normalized,
       senderGender: body.senderGender === "female" ? "female" : "male",
       vibe: cleanVibe,
-      surpriseId: surpriseId || "cl-timeless",
+      surpriseId: cleanSurpriseId || null,
       message: sanitizeText(message).slice(0, 500),
       musicUrl: cleanMusicUrl,
       musicPlatform,

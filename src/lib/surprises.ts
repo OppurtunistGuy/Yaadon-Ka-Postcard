@@ -993,7 +993,7 @@ export function getSurprisesForTheme(themeId?: string | null, vibe?: Vibe | null
 
 export function getSurpriseById(id?: string | null): Surprise | undefined {
   if (!id || id === "none") return undefined;
-  const s = SURPRISES.find((item) => item.id === id);
+  const s = SURPRISES.find((item) => item.id === id || item.rakhiId === id || item.ganpatiImgId === id);
   if (!s) return undefined;
   if (!s.gif && s.gifUrl) {
     s.gif = createAuthoritativeGif(s.id, s.title, s.character, s.gifUrl);

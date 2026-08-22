@@ -23,10 +23,11 @@ export function PreviewScreen() {
   const [revealed, setRevealed] = useState(false);
 
   async function handleGenerate() {
-    if (!surprise) {
+    const isFestivalMode = draft.themeId === "rakhi" || draft.themeId === "ganpati";
+    if (isFestivalMode && !draft.surpriseId) {
       toast({
-        title: "Surprise missing",
-        description: "Please go back and select a surprise.",
+        title: "Please select a surprise",
+        description: "Please go back and select a festival surprise for your postcard.",
         variant: "destructive",
       });
       return;
