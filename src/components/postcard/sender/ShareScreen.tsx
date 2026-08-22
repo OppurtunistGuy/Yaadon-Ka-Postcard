@@ -11,6 +11,7 @@ import { PostageStamp } from "../shared/Stamp";
 import { DeliveryStatus } from "./DeliveryStatus";
 import { useSenderStore } from "@/lib/postcard-store";
 import { useToast } from "@/hooks/use-toast";
+import { ShareAppCard } from "../shared/ShareAppModal";
 
 export function ShareScreen() {
   const { generatedToken, reset } = useSenderStore();
@@ -208,6 +209,11 @@ export function ShareScreen() {
               <DeliveryStatus token={generatedToken} />
             </div>
           )}
+
+          {/* Share Yaadon Ka Postcard App */}
+          <div className="mt-6">
+            <ShareAppCard />
+          </div>
 
           <div className="mt-8 flex justify-center">
             <WaxSeal size={56} emoji="❤" />

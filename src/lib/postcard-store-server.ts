@@ -164,8 +164,8 @@ export function decodeSelfContainedToken(rawToken: string): PostcardPayload | nu
 }
 
 export async function createPostcard(payload: PostcardPayload): Promise<{ token: string }> {
-  // Generate a clean, short 12-character token for DB insertion
-  const shortToken = `c_${generateOpaqueId(10)}`;
+  // Generate a clean, short 8-character unpredictable random ID (e.g. a7K9xQ2m)
+  const shortToken = generateOpaqueId(8);
 
   try {
     const dataToInsert: any = {
@@ -191,10 +191,9 @@ export async function createPostcard(payload: PostcardPayload): Promise<{ token:
     postcardCache.set(shortToken, { ...payload, token: shortToken });
     return { token: shortToken };
   } catch (e) {
-    console.warn("[createPostcard] DB save notice (compressed token fallback active):", e);
-    const selfContainedToken = encodeSelfContainedToken(payload);
-    postcardCache.set(selfContainedToken, { ...payload, token: selfContainedToken });
-    return { token: selfContainedToken };
+    console.warn("[createPostcard] DB save notice (in-memory mapping active):", e);
+    postcardCache.set(shortToken, { ...payload, token: shortToken });
+    return { token: shortToken };
   }
 }
 

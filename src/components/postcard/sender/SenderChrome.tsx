@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { Mail, ChevronLeft } from "lucide-react";
 import { PaperBackground } from "../shared/PaperBackground";
 import { AirmailDivider } from "../shared/AirmailBorder";
 import { useSenderStore } from "@/lib/postcard-store";
+import { ShareAppModal } from "../shared/ShareAppModal";
 
 /**
  * Shared sender screen chrome — header with step indicator + footer tagline.
@@ -78,15 +80,26 @@ function StepPips({ step, total }: { step: number; total: number }) {
 }
 
 export function SenderFooter() {
+  const [modalOpen, setModalOpen] = useState(false);
+
   return (
-    <footer className="px-4 sm:px-8 pb-5 pt-4 text-center">
-      <p
-        className="font-serif-vintage text-[10px] tracking-[0.2em] uppercase"
-        style={{ color: "var(--ink-soft)" }}
-      >
-        ♡ &mdash; Send a postcard. Share a feeling. Create a memory. &mdash; ♡
-      </p>
-    </footer>
+    <>
+      <footer className="px-4 sm:px-8 pb-5 pt-4 text-center space-y-2">
+        <p
+          className="font-serif-vintage text-[10px] tracking-[0.2em] uppercase"
+          style={{ color: "var(--ink-soft)" }}
+        >
+          ♡ &mdash; Send a postcard. Share a feeling. Create a memory. &mdash; ♡
+        </p>
+        <button
+          onClick={() => setModalOpen(true)}
+          className="inline-flex items-center gap-1.5 text-xs font-serif-vintage font-bold text-[var(--burgundy)] hover:underline opacity-80 hover:opacity-100 transition cursor-pointer"
+        >
+          <span>📲 Share Yaadon Ka Postcard App</span>
+        </button>
+      </footer>
+      <ShareAppModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
+    </>
   );
 }
 
