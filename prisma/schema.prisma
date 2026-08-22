@@ -20,7 +20,7 @@ model Postcard {
   senderName   String
   senderGender String?  @default("male")
   vibe         String
-  surpriseId   String
+  surpriseId   String?
   message      String
   themeId       String?
   musicUrl      String?
