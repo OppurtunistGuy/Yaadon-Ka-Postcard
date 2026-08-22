@@ -108,60 +108,18 @@ export function SurpriseScreen() {
       <main className="flex-1 px-4 sm:px-8 py-6 box-border min-w-0">
         <div className="max-w-4xl mx-auto space-y-6">
 
-          {/* ===== Top Theme Switcher Tabs ===== */}
-          <div className="mb-6">
-            <div className="text-center mb-3">
-              <h2
-                className="font-serif-vintage text-2xl sm:text-3xl font-bold flex items-center justify-center gap-2 text-[var(--burgundy)]"
-              >
-                <span>✨</span> Pick a Festival Theme <span>✨</span>
-              </h2>
-              <p className="font-handwritten text-sm text-[var(--ink-soft)] mt-0.5">
-                Choose a theme to continue creating your postcard
-              </p>
-            </div>
-
-            {/* Tabs */}
-            <div className="flex items-center justify-center gap-2 max-w-md mx-auto p-1.5 rounded-lg bg-[#faf2dc] border border-amber-900/20 shadow-xs">
-              <button
-                type="button"
-                onClick={() => handleThemeSwitch("classic")}
-                className={cn(
-                  "flex-1 py-2 px-3 rounded-md text-xs sm:text-sm font-serif-vintage font-bold transition flex items-center justify-center gap-1.5 cursor-pointer",
-                  isClassicMode
-                    ? "bg-[var(--burgundy)] text-white shadow-xs"
-                    : "text-amber-950 hover:bg-amber-900/10"
-                )}
-              >
-                <span>✉️</span> Classic
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleThemeSwitch("rakhi")}
-                className={cn(
-                  "flex-1 py-2 px-3 rounded-md text-xs sm:text-sm font-serif-vintage font-bold transition flex items-center justify-center gap-1.5 cursor-pointer",
-                  isRakhiMode
-                    ? "bg-rose-700 text-white shadow-xs"
-                    : "text-amber-950 hover:bg-amber-900/10"
-                )}
-              >
-                <span>🪡</span> Rakhi
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleThemeSwitch("ganpati")}
-                className={cn(
-                  "flex-1 py-2 px-3 rounded-md text-xs sm:text-sm font-serif-vintage font-bold transition flex items-center justify-center gap-1.5 cursor-pointer",
-                  isGanpatiMode
-                    ? "bg-amber-700 text-white shadow-xs"
-                    : "text-amber-950 hover:bg-amber-900/10"
-                )}
-              >
-                <span>🕉️</span> Ganpati
-              </button>
-            </div>
+          {/* ===== Theme Header Badge (Step 1 Single Source of Truth) ===== */}
+          <div className="mb-6 text-center">
+            <h2 className="font-serif-vintage text-2xl sm:text-3xl font-bold flex items-center justify-center gap-2 text-[var(--burgundy)]">
+              {isClassicMode && <span>✉️ Classic Postcard Surprise ✉️</span>}
+              {isRakhiMode && <span>🪡 Rakhi Festival Surprise 🪡</span>}
+              {isGanpatiMode && <span>🕉️ Ganpati Bappa Surprise 🕉️</span>}
+            </h2>
+            <p className="font-handwritten text-sm text-[var(--ink-soft)] mt-0.5">
+              {isClassicMode && "Select a vibe and character surprise for your postcard"}
+              {isRakhiMode && "Attach a virtual rakhi thread for your sibling"}
+              {isGanpatiMode && "Attach a divine Bappa blessing for your family & friends"}
+            </p>
           </div>
 
           {/* ===== CLASSIC MODE CONTENT ===== */}

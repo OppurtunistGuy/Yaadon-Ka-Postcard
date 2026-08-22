@@ -156,7 +156,7 @@ export const PostcardCard = forwardRef<
                   className="font-handwritten text-sm italic"
                   style={{ color: "var(--ink-soft)" }}
                 >
-                  {data.senderGender === "female" ? "Teri," : "Tera,"}
+                  With love,
                 </div>
                 <div
                   className="font-handwritten text-base font-bold"
@@ -226,8 +226,8 @@ export const PostcardCard = forwardRef<
             </div>
           </div>
 
-          {/* ===== Surprise section (Hidden for Classic Plain Postcards) ===== */}
-          {!isPlain && data.themeId !== "classic" && data.surprise && (
+          {/* ===== Surprise section (Hidden until revealed) ===== */}
+          {!isPlain && Boolean(data.surprise) && (
             <SurpriseSlot
               surprise={data.surprise}
               themeAccent={theme.accentColor}

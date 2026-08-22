@@ -350,60 +350,30 @@ export function DetailsScreen() {
                 </div>
               </div>
 
-              {/* From / Sender Name & Sign-off Toggle */}
+              {/* From / Sender Name */}
               <div>
                 <label className="block mb-1">
                   <span className="font-serif-vintage text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 text-[var(--burgundy)]">
-                    <span>✍️</span> Your Name & Sign-off
+                    <span>✍️</span> Your Name (With love,)
                   </span>
                 </label>
 
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                  <input
-                    type="text"
-                    value={draft.senderName}
-                    onChange={(e) => {
-                      updateDraft({ senderName: e.target.value });
-                      if (senderError) setSenderError(undefined);
-                    }}
-                    onBlur={handleSenderBlur}
-                    placeholder="e.g. Rahul / Priya"
-                    maxLength={50}
-                    className={cn(
-                      "field-vintage flex-1 font-handwritten text-base px-3 py-2.5 rounded-md outline-none transition-all leading-relaxed h-[44px] sm:h-[44px]",
-                      senderError ? "border-red-600 bg-red-50/40" : "border-[var(--border)] bg-[#fffceb]"
-                    )}
-                    style={{ color: "var(--ink)" }}
-                  />
-
-                  {/* Sign-off Gender Toggle */}
-                  <div className="flex items-center gap-1.5 shrink-0 bg-[#f5ebd2] p-1 rounded-md border border-amber-900/20 h-[44px]">
-                    <button
-                      type="button"
-                      onClick={() => updateDraft({ senderGender: "male" })}
-                      className={cn(
-                        "px-3 py-1.5 rounded text-xs font-serif-vintage transition border cursor-pointer h-full flex items-center justify-center",
-                        (draft.senderGender || "male") === "male"
-                          ? "bg-[var(--burgundy)] text-white border-[var(--burgundy)] shadow-xs font-bold"
-                          : "text-amber-950 border-transparent hover:bg-amber-900/10"
-                      )}
-                    >
-                      Tera (Male)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => updateDraft({ senderGender: "female" })}
-                      className={cn(
-                        "px-3 py-1.5 rounded text-xs font-serif-vintage transition border cursor-pointer h-full flex items-center justify-center",
-                        draft.senderGender === "female"
-                          ? "bg-[var(--burgundy)] text-white border-[var(--burgundy)] shadow-xs font-bold"
-                          : "text-amber-950 border-transparent hover:bg-amber-900/10"
-                      )}
-                    >
-                      Teri (Female)
-                    </button>
-                  </div>
-                </div>
+                <input
+                  type="text"
+                  value={draft.senderName}
+                  onChange={(e) => {
+                    updateDraft({ senderName: e.target.value });
+                    if (senderError) setSenderError(undefined);
+                  }}
+                  onBlur={handleSenderBlur}
+                  placeholder="e.g. Rahul / Priya"
+                  maxLength={50}
+                  className={cn(
+                    "field-vintage w-full font-handwritten text-base px-3 py-2.5 rounded-md outline-none transition-all leading-relaxed h-[44px] sm:h-[44px]",
+                    senderError ? "border-red-600 bg-red-50/40" : "border-[var(--border)] bg-[#fffceb]"
+                  )}
+                  style={{ color: "var(--ink)" }}
+                />
 
                 {senderError && (
                   <p className="text-xs text-red-700 mt-1 font-sans font-medium">{senderError}</p>
