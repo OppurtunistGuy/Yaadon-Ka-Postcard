@@ -6,6 +6,7 @@ import { Mail, ZoomIn, ZoomOut, RotateCcw, Heart, Send } from "lucide-react";
 import { PaperBackground } from "../shared/PaperBackground";
 import { PostcardCard } from "../shared/PostcardCard";
 import { ReactionBar } from "./ReactionBar";
+import { FeedbackForm } from "./FeedbackForm";
 import type { PostcardData } from "../shared/PostcardCard";
 
 const ZOOM_STEPS = [0.75, 1.0, 1.25, 1.5, 2.0];
@@ -24,6 +25,7 @@ export function ReceiverView({
   onGoHome: () => void;
 }) {
   const [revealed, setRevealed] = useState(false);
+  const [isClaimed, setIsClaimed] = useState(false);
   const [zoomIndex, setZoomIndex] = useState(1); // 1.0 (100%) by default
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
@@ -36,6 +38,19 @@ export function ReceiverView({
   function handleReveal() {
     setRevealed(true);
     onReveal();
+  }
+
+  async function handleClaim() {
+    setIsClaimed(true);
+    try {
+      await fetch(`/api/postcards/${token}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "claim" }),
+      });
+    } catch {
+      // best-effort
+    }
   }
 
   function handleZoomIn() {
@@ -206,9 +221,31 @@ export function ReceiverView({
                   </button>
                 </div>
 
+                {/* Recipient Claim Confirmation Action */}
+                <div className="mt-4 text-center">
+                  {isClaimed ? (
+                    <div className="p-2.5 rounded-md bg-emerald-50 border border-emerald-200 text-xs font-serif-vintage font-bold text-emerald-800 inline-flex items-center gap-1.5 shadow-2xs">
+                      <span>✅ Claimed by recipient</span>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={handleClaim}
+                      className="btn-pastel font-serif-vintage text-xs font-bold px-4 py-2 rounded-md transition border border-amber-900/20 shadow-2xs hover:shadow inline-flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <span>🙋</span>
+                      <span>This postcard is for me</span>
+                    </button>
+                  )}
+                </div>
+
                 {/* Reaction bar for quick feedback */}
                 <div className="w-full mt-6">
                   <ReactionBar token={token} senderName={data.senderName} initialReaction={initialReaction} />
+                </div>
+
+                {/* Receiver Feedback & Star Rating Form (After Reveal) */}
+                <div className="w-full">
+                  <FeedbackForm token={token} />
                 </div>
               </motion.div>
             )}

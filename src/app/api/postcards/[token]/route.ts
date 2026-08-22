@@ -3,6 +3,19 @@ import { db } from "@/lib/db";
 import { getSurpriseById, getVibeMeta } from "@/lib/surprises";
 import { checkRateLimit, sanitizeText } from "@/lib/security";
 import { fetchPostcardByToken } from "@/lib/postcard-store-server";
+import { trackEvent } from "@/lib/analytics";
+
+function formatPublicDisplayName(rawName?: string | null): string | null {
+  if (!rawName) return null;
+  const clean = sanitizeText(rawName).trim();
+  if (!clean) return null;
+
+  const parts = clean.split(/\s+/);
+  if (parts.length === 1) return parts[0];
+  const firstName = parts[0];
+  const lastInitial = parts[parts.length - 1][0]?.toUpperCase();
+  return lastInitial ? `${firstName} ${lastInitial}.` : firstName;
+}
 
 export async function GET(
   req: NextRequest,
@@ -63,6 +76,10 @@ export async function GET(
         openedAt: card.openedAt,
         revealedAt: card.revealedAt,
         reaction: card.reaction,
+        rating: card.rating,
+        comment: card.comment,
+        publicName: card.publicName,
+        isPublic: card.isPublic ?? false,
       },
       surprise: {
         id: surprise.id,
@@ -99,6 +116,10 @@ export async function PATCH(
     const body = await req.json().catch(() => ({}));
     const action = body?.action;
     const reaction = typeof body?.reaction === "string" ? sanitizeText(body.reaction).slice(0, 16) : null;
+    const rating = typeof body?.rating === "number" && body.rating >= 1 && body.rating <= 5 ? body.rating : null;
+    const comment = typeof body?.comment === "string" ? sanitizeText(body.comment).slice(0, 300) : null;
+    const isPublic = Boolean(body?.isPublic);
+    const rawPublicName = typeof body?.publicName === "string" ? body.publicName : null;
 
     let card: any = null;
     try {
@@ -111,11 +132,28 @@ export async function PATCH(
       return NextResponse.json({ ok: true, reaction: reaction || null });
     }
 
-    const data: { openedAt?: Date; revealedAt?: Date; reaction?: string | null } = {};
-    if (action === "open" && !card.openedAt) data.openedAt = new Date();
-    if (action === "reveal" && !card.revealedAt) data.revealedAt = new Date();
+    const data: any = {};
+    if (action === "open" && !card.openedAt) {
+      data.openedAt = new Date();
+      trackEvent({ event: "postcard_opened", themeId: card.themeId });
+    }
+    if (action === "reveal" && !card.revealedAt) {
+      data.revealedAt = new Date();
+      trackEvent({ event: "surprise_revealed", themeId: card.themeId });
+    }
     if (action === "react" && reaction !== null) {
       data.reaction = reaction || null;
+      trackEvent({ event: "feedback_submitted", themeId: card.themeId });
+    }
+    if (action === "feedback") {
+      if (rating !== null) data.rating = rating;
+      if (comment !== null) data.comment = comment;
+      data.isPublic = isPublic;
+      data.publicName = isPublic ? formatPublicDisplayName(rawPublicName) : null;
+      trackEvent({ event: "feedback_submitted", rating: rating || undefined, themeId: card.themeId });
+    }
+    if (action === "claim" && !card.claimedAt) {
+      data.claimedAt = new Date();
     }
 
     if (Object.keys(data).length > 0) {
@@ -126,7 +164,12 @@ export async function PATCH(
       }
     }
 
-    return NextResponse.json({ ok: true, reaction: data.reaction ?? card.reaction });
+    return NextResponse.json({
+      ok: true,
+      reaction: data.reaction ?? card.reaction,
+      rating: data.rating ?? card.rating,
+      isPublic: data.isPublic ?? card.isPublic,
+    });
   } catch (err) {
     console.error("[PATCH /api/postcards/[token]]", err);
     return NextResponse.json({ ok: false, error: "Update failed" }, { status: 500 });

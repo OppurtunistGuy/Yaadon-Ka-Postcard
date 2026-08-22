@@ -1,183 +1,334 @@
 "use client";
 
-import Link from "next/link";
-import { useState } from "react";
-import { Mail, ArrowLeft, Trash2, Search, Clock, ExternalLink } from "lucide-react";
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import {
+  Mail,
+  Plus,
+  Copy,
+  Check,
+  Eye,
+  Gift,
+  CheckCircle2,
+  Clock,
+  Sparkles,
+  RefreshCw,
+  ExternalLink,
+} from "lucide-react";
 import { PaperBackground } from "@/components/postcard/shared/PaperBackground";
-import { AirmailDivider } from "@/components/postcard/shared/AirmailBorder";
 import { useSentPostcards } from "@/hooks/use-sent-postcards";
+import { useToast } from "@/hooks/use-toast";
 
-export default function PostcardsHistoryPage() {
-  const { records, removeRecord, clear } = useSentPostcards();
-  const [searchTerm, setSearchTerm] = useState("");
+interface SenderPostcard {
+  token: string;
+  receiverName: string;
+  city: string;
+  themeId: string;
+  createdAt: string;
+  openedAt?: string | null;
+  revealedAt?: string | null;
+  claimedAt?: string | null;
+  reaction?: string | null;
+  status: "Created" | "Opened" | "Surprise Revealed" | "Claimed";
+}
 
-  const filteredRecords = records.filter((r) => {
-    const q = searchTerm.toLowerCase();
-    return (
-      r.receiverName.toLowerCase().includes(q) ||
-      r.city.toLowerCase().includes(q) ||
-      r.senderName.toLowerCase().includes(q) ||
-      r.vibeLabel.toLowerCase().includes(q)
-    );
+interface SenderStats {
+  totalSent: number;
+  remainingCredits: number;
+  openedCount: number;
+  revealedCount: number;
+}
+
+export default function MyPostcardsDashboardPage() {
+  const { records } = useSentPostcards();
+  const { toast } = useToast();
+  const [postcards, setPostcards] = useState<SenderPostcard[]>([]);
+  const [stats, setStats] = useState<SenderStats>({
+    totalSent: 0,
+    remainingCredits: 10,
+    openedCount: 0,
+    revealedCount: 0,
   });
+  const [isLoading, setIsLoading] = useState(true);
+  const [copiedToken, setCopiedToken] = useState<string | null>(null);
+
+  async function loadSenderDashboard() {
+    setIsLoading(true);
+    try {
+      const localTokens = records.map((r) => r.token).join(",");
+      const res = await fetch(`/api/sender/postcards?localTokens=${encodeURIComponent(localTokens)}`);
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        setPostcards(data.postcards || []);
+        setStats(data.stats || { totalSent: 0, remainingCredits: 10, openedCount: 0, revealedCount: 0 });
+      }
+    } catch {
+      // fallback to local records if offline
+      setPostcards(
+        records.map((r) => ({
+          token: r.token,
+          receiverName: r.receiverName,
+          city: r.city,
+          themeId: r.themeId || "classic",
+          createdAt: String(r.createdAt || new Date().toISOString()),
+          status: "Created",
+        }))
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadSenderDashboard();
+  }, [records]);
+
+  function handleCopyLink(token: string) {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const url = `${origin}/p/${token}`;
+    navigator.clipboard.writeText(url);
+    setCopiedToken(token);
+    toast({
+      title: "Link copied!",
+      description: "Postcard link copied to clipboard.",
+    });
+    setTimeout(() => setCopiedToken(null), 2000);
+  }
 
   return (
-    <PaperBackground className="min-h-screen flex flex-col">
+    <PaperBackground className="min-h-screen flex flex-col justify-between selection:bg-amber-900/10">
       {/* Header */}
-      <header className="px-4 sm:px-8 pt-6 pb-4 border-b" style={{ borderColor: "var(--border)" }}>
-        <div className="max-w-3xl mx-auto flex items-center justify-between gap-4">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-serif-vintage font-bold hover:opacity-75 transition"
-            style={{ color: "var(--burgundy)" }}
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back to Postcard Desk</span>
-          </Link>
+      <header className="px-4 sm:px-8 py-4 border-b sticky top-0 z-30 bg-[#f7eed8]/95 backdrop-blur-xs" style={{ borderColor: "var(--border)" }}>
+        <div className="max-w-5xl mx-auto flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <Mail className="w-4 h-4" style={{ color: "var(--burgundy)" }} />
-            <span className="font-serif-vintage font-bold text-sm sm:text-base" style={{ color: "var(--burgundy)" }}>
-              Postcards Mailbox
-            </span>
+            <Mail className="w-5 h-5 text-[var(--burgundy)]" />
+            <div>
+              <h1 className="font-serif-vintage font-bold text-lg text-[var(--burgundy)] leading-none">
+                My Postcards Dashboard
+              </h1>
+              <span className="font-handwritten text-xs text-[var(--ink-soft)]">
+                Private Sender Activity & Status Tracker
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={loadSenderDashboard}
+              disabled={isLoading}
+              className="p-2 rounded-md border border-amber-900/20 bg-amber-50/70 hover:bg-amber-100/70 text-xs font-serif-vintage text-[var(--burgundy)] flex items-center gap-1.5 transition cursor-pointer"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} />
+              <span className="hidden sm:inline">Sync Status</span>
+            </button>
+
+            <a
+              href="/"
+              className="btn-vintage font-serif-vintage text-xs font-bold px-3.5 py-2 rounded-md tracking-wider flex items-center gap-1.5 shadow-2xs hover:shadow transition"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Create Postcard</span>
+            </a>
           </div>
         </div>
       </header>
 
-      {/* Main Mailbox Content */}
+      {/* Main Content */}
       <main className="flex-1 px-4 sm:px-8 py-8">
-        <div className="max-w-3xl mx-auto">
-          {/* Top Title & Clear Actions */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-            <div>
-              <h1 className="font-serif-vintage font-extrabold text-2xl sm:text-3xl" style={{ color: "var(--burgundy)" }}>
-                Sent Postcards History
-              </h1>
-              <p className="font-handwritten text-sm text-[var(--ink-soft)] mt-0.5">
-                Every memory you&apos;ve posted from this device.
-              </p>
+        <div className="max-w-5xl mx-auto space-y-6">
+
+          {/* Stats Row */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Total Sent */}
+            <div className="p-4 rounded-lg border bg-[#faf2dc] border-amber-900/20 shadow-2xs">
+              <div className="text-xs font-serif-vintage uppercase font-bold text-[var(--ink-soft)] flex items-center justify-between">
+                <span>Total Sent</span>
+                <span>📮</span>
+              </div>
+              <div className="font-serif-vintage text-3xl font-bold text-[var(--burgundy)] mt-2">
+                {stats.totalSent}
+              </div>
+              <div className="text-[11px] font-handwritten text-[var(--ink-soft)] mt-1">
+                Postcards created by you
+              </div>
             </div>
 
-            {records.length > 0 && (
-              <button
-                onClick={clear}
-                className="text-xs font-serif-vintage px-3 py-1.5 rounded border self-start sm:self-auto hover:bg-black/5 transition"
-                style={{ borderColor: "var(--border)", color: "var(--ink-soft)" }}
-              >
-                Clear Entire Mailbox
-              </button>
+            {/* Remaining Credits */}
+            <div className="p-4 rounded-lg border bg-[#faf2dc] border-amber-900/20 shadow-2xs">
+              <div className="text-xs font-serif-vintage uppercase font-bold text-[var(--ink-soft)] flex items-center justify-between">
+                <span>Remaining Credits</span>
+                <span>🎟️</span>
+              </div>
+              <div className="font-serif-vintage text-3xl font-bold text-emerald-800 mt-2">
+                {stats.remainingCredits}
+              </div>
+              <div className="text-[11px] font-handwritten text-[var(--ink-soft)] mt-1">
+                Postcards remaining in plan
+              </div>
+            </div>
+
+            {/* Opened */}
+            <div className="p-4 rounded-lg border bg-[#faf2dc] border-amber-900/20 shadow-2xs">
+              <div className="text-xs font-serif-vintage uppercase font-bold text-[var(--ink-soft)] flex items-center justify-between">
+                <span>Opened</span>
+                <Eye className="w-4 h-4 text-amber-800" />
+              </div>
+              <div className="font-serif-vintage text-3xl font-bold text-[var(--burgundy)] mt-2">
+                {stats.openedCount}
+              </div>
+              <div className="text-[11px] font-handwritten text-[var(--ink-soft)] mt-1">
+                Opened by receivers
+              </div>
+            </div>
+
+            {/* Surprise Revealed */}
+            <div className="p-4 rounded-lg border bg-[#faf2dc] border-amber-900/20 shadow-2xs">
+              <div className="text-xs font-serif-vintage uppercase font-bold text-[var(--ink-soft)] flex items-center justify-between">
+                <span>Surprise Revealed</span>
+                <Gift className="w-4 h-4 text-amber-800" />
+              </div>
+              <div className="font-serif-vintage text-3xl font-bold text-[var(--burgundy)] mt-2">
+                {stats.revealedCount}
+              </div>
+              <div className="text-[11px] font-handwritten text-[var(--ink-soft)] mt-1">
+                Surprises unlocked
+              </div>
+            </div>
+          </div>
+
+          {/* Postcards List */}
+          <div className="p-5 rounded-lg border bg-[#faf2dc] border-amber-900/20 shadow-2xs">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-serif-vintage text-sm uppercase tracking-wider font-bold text-[var(--burgundy)] flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-[var(--burgundy)]" />
+                <span>Your Sent Postcards ({postcards.length})</span>
+              </h2>
+              <span className="font-handwritten text-xs text-[var(--ink-soft)]">
+                State Flow: Created &rarr; Opened &rarr; Surprise Revealed &rarr; Claimed
+              </span>
+            </div>
+
+            {postcards.length === 0 ? (
+              <div className="text-center p-8 bg-amber-50/50 rounded-md border border-dashed border-amber-900/20">
+                <p className="font-serif-vintage text-sm font-bold text-[var(--burgundy)]">
+                  You haven&apos;t sent any postcards yet!
+                </p>
+                <p className="font-handwritten text-xs text-[var(--ink-soft)] mt-1 mb-4">
+                  Create a custom nostalgic postcard for someone special.
+                </p>
+                <a
+                  href="/"
+                  className="btn-vintage font-serif-vintage text-xs font-bold px-5 py-2 rounded-md inline-flex items-center gap-1.5 shadow-xs"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Send First Postcard</span>
+                </a>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {postcards.map((card) => {
+                  const isClaimed = card.status === "Claimed" || Boolean(card.claimedAt);
+                  const isRevealed = card.status === "Surprise Revealed" || Boolean(card.revealedAt);
+                  const isOpened = card.status === "Opened" || Boolean(card.openedAt);
+
+                  return (
+                    <div
+                      key={card.token}
+                      className="p-4 rounded-md border bg-[#fffceb] border-amber-900/15 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs"
+                    >
+                      {/* Left: Recipient Info */}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-serif-vintage font-bold text-sm text-[var(--burgundy)]">
+                            To: {card.receiverName}
+                          </span>
+                          <span className="text-xs italic text-[var(--ink-soft)]">
+                            📍 {card.city}
+                          </span>
+                          <span className="text-[10px] uppercase font-serif-vintage font-bold px-2 py-0.5 rounded bg-amber-100/70 border border-amber-900/10 text-amber-950">
+                            {card.themeId}
+                          </span>
+                        </div>
+
+                        <div className="text-[11px] font-mono text-[var(--ink-soft)] mt-1 flex items-center gap-2 flex-wrap">
+                          <span>
+                            Sent: {new Date(card.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                          </span>
+                          {card.reaction && (
+                            <span className="bg-amber-100 px-1.5 py-0.5 rounded text-[10px] font-sans font-bold text-amber-900">
+                              Reaction: {card.reaction}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Right: Status Badge & Actions */}
+                      <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-between sm:justify-end">
+                        {/* Status Badge */}
+                        <div>
+                          {isClaimed ? (
+                            <span className="inline-flex items-center gap-1 text-xs font-serif-vintage font-bold px-2.5 py-1 rounded bg-emerald-100 text-emerald-950 border border-emerald-300">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
+                              Claimed by recipient
+                            </span>
+                          ) : isRevealed ? (
+                            <span className="inline-flex items-center gap-1 text-xs font-serif-vintage font-bold px-2.5 py-1 rounded bg-purple-100 text-purple-950 border border-purple-300">
+                              <Gift className="w-3.5 h-3.5 text-purple-700" />
+                              Surprise Revealed
+                            </span>
+                          ) : isOpened ? (
+                            <span className="inline-flex items-center gap-1 text-xs font-serif-vintage font-bold px-2.5 py-1 rounded bg-blue-100 text-blue-950 border border-blue-300">
+                              <Eye className="w-3.5 h-3.5 text-blue-700" />
+                              Opened
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-xs font-serif-vintage font-bold px-2.5 py-1 rounded bg-amber-100 text-amber-950 border border-amber-300">
+                              <Clock className="w-3.5 h-3.5 text-amber-700" />
+                              Created
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Action buttons */}
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => handleCopyLink(card.token)}
+                            className="p-1.5 rounded border border-amber-900/20 bg-amber-50 hover:bg-amber-100 text-xs font-serif-vintage text-[var(--burgundy)] flex items-center gap-1 transition cursor-pointer"
+                            title="Copy Share Link"
+                          >
+                            {copiedToken === card.token ? (
+                              <Check className="w-3.5 h-3.5 text-emerald-700" />
+                            ) : (
+                              <Copy className="w-3.5 h-3.5" />
+                            )}
+                            <span className="text-[11px] font-bold">Copy</span>
+                          </button>
+
+                          <a
+                            href={`/p/${card.token}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1.5 rounded border border-amber-900/20 bg-amber-50 hover:bg-amber-100 text-xs font-serif-vintage text-[var(--burgundy)] flex items-center gap-1 transition"
+                            title="View Postcard"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
 
-          {/* Search Box */}
-          {records.length > 0 && (
-            <div className="relative mb-6">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 opacity-50" style={{ color: "var(--ink)" }} />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search by receiver name, city, sender or vibe..."
-                className="w-full pl-9 pr-4 py-2 text-xs sm:text-sm rounded-md border font-serif-vintage focus:outline-none focus:ring-1"
-                style={{
-                  borderColor: "var(--border)",
-                  backgroundColor: "#faf3e0",
-                  color: "var(--ink)",
-                }}
-              />
-            </div>
-          )}
-
-          {/* List of Sent Postcards */}
-          {records.length === 0 ? (
-            <div className="text-center py-16 px-4 rounded-lg border bg-[#faf3e0]/60" style={{ borderColor: "var(--border)" }}>
-              <div className="text-4xl mb-3">📭</div>
-              <h3 className="font-serif-vintage font-bold text-lg" style={{ color: "var(--burgundy)" }}>
-                No sent postcards yet
-              </h3>
-              <p className="font-handwritten text-sm text-[var(--ink-soft)] mt-1 max-w-sm mx-auto">
-                Once you create and share a postcard with someone special, it will appear here in your mailbox.
-              </p>
-              <Link
-                href="/"
-                className="mt-5 btn-vintage font-serif-vintage font-semibold text-xs sm:text-sm px-5 py-2.5 rounded-md inline-flex items-center gap-2"
-              >
-                <Mail className="w-4 h-4" />
-                Create your first postcard
-              </Link>
-            </div>
-          ) : filteredRecords.length === 0 ? (
-            <div className="text-center py-12 text-xs sm:text-sm text-[var(--ink-soft)] font-serif-vintage">
-              No postcards found matching &ldquo;{searchTerm}&rdquo;
-            </div>
-          ) : (
-            <div className="divide-y rounded-md overflow-hidden bg-[#faf3e0]/90 border shadow-xs" style={{ borderColor: "var(--border)" }}>
-              {filteredRecords.map((r) => {
-                const dateStr = new Date(r.createdAt).toLocaleDateString("en-IN", {
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                });
-
-                return (
-                  <div
-                    key={r.token}
-                    className="p-3.5 sm:p-4 flex items-center justify-between gap-3 hover:bg-black/[0.02] transition"
-                  >
-                    {/* Emoji badge */}
-                    <div className="text-2xl sm:text-3xl shrink-0 select-none">
-                      {r.vibeEmoji || "💌"}
-                    </div>
-
-                    {/* Information */}
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-baseline gap-2 truncate">
-                        <span className="font-serif-vintage font-bold text-sm sm:text-base text-[var(--ink)]">
-                          To {r.receiverName}
-                        </span>
-                        <span className="text-xs text-[var(--ink-soft)] opacity-80">
-                          · {r.city}
-                        </span>
-                      </div>
-                      <div className="font-handwritten text-xs sm:text-sm text-[var(--ink-soft)] flex items-center gap-2 mt-0.5">
-                        <span>{r.vibeLabel}</span>
-                        <span>· from {r.senderName}</span>
-                      </div>
-                      <div className="text-[10px] font-mono text-[var(--ink-soft)] opacity-60 mt-1 flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        <span>{dateStr}</span>
-                        <span>· Link: /p/{r.token}</span>
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-2.5 shrink-0">
-                      <Link
-                        href={`/p/${r.token}`}
-                        className="font-serif-vintage text-xs font-semibold px-3 py-1.5 rounded border hover:bg-black/5 transition inline-flex items-center gap-1.5"
-                        style={{ color: "var(--burgundy)", borderColor: "var(--border)" }}
-                      >
-                        <span>View</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </Link>
-                      <button
-                        onClick={() => removeRecord(r.token)}
-                        aria-label="Delete record"
-                        className="opacity-50 hover:opacity-100 p-1.5 transition text-[var(--ink-soft)] hover:text-red-700"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
         </div>
       </main>
 
-      <footer className="px-4 sm:px-8 py-6 text-center border-t" style={{ borderColor: "var(--border)" }}>
+      {/* Footer */}
+      <footer className="px-4 sm:px-8 py-5 text-center border-t" style={{ borderColor: "var(--border)" }}>
         <p className="font-serif-vintage text-[10px] tracking-[0.2em] uppercase text-[var(--ink-soft)]">
-          ♡ &mdash; Yaadon ka Postcard &bull; Nostalgic Indian Mail &mdash; ♡
+          ♡ &mdash; Yaadon Ka Postcard · Sender Activity Center &mdash; ♡
         </p>
       </footer>
     </PaperBackground>

@@ -4,6 +4,7 @@ import { generateOpaqueId } from "./security";
 
 export interface PostcardPayload {
   token?: string;
+  senderKey?: string | null;
   themeId?: string | null;
   receiverName: string;
   city: string;
@@ -18,7 +19,12 @@ export interface PostcardPayload {
   musicTitle?: string | null;
   openedAt?: Date | null;
   revealedAt?: Date | null;
+  claimedAt?: Date | null;
   reaction?: string | null;
+  rating?: number | null;
+  comment?: string | null;
+  publicName?: string | null;
+  isPublic?: boolean;
   createdAt?: Date;
 }
 
@@ -164,6 +170,7 @@ export async function createPostcard(payload: PostcardPayload): Promise<{ token:
   try {
     const dataToInsert: any = {
       token: shortToken,
+      senderKey: payload.senderKey || null,
       themeId: payload.themeId || "classic",
       receiverName: payload.receiverName,
       city: payload.city,
@@ -206,6 +213,7 @@ export async function fetchPostcardByToken(rawToken: string): Promise<PostcardPa
     if (cardFromDb) {
       const result: PostcardPayload = {
         token: cardFromDb.token,
+        senderKey: cardFromDb.senderKey,
         themeId: cardFromDb.themeId,
         receiverName: cardFromDb.receiverName,
         city: cardFromDb.city,
@@ -220,7 +228,12 @@ export async function fetchPostcardByToken(rawToken: string): Promise<PostcardPa
         musicTitle: cardFromDb.musicTitle,
         openedAt: cardFromDb.openedAt,
         revealedAt: cardFromDb.revealedAt,
+        claimedAt: cardFromDb.claimedAt,
         reaction: cardFromDb.reaction,
+        rating: cardFromDb.rating,
+        comment: cardFromDb.comment,
+        publicName: cardFromDb.publicName,
+        isPublic: cardFromDb.isPublic ?? false,
         createdAt: cardFromDb.createdAt,
       };
       postcardCache.set(token, result);

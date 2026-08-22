@@ -993,11 +993,11 @@ export function getSurprisesForTheme(themeId?: string | null, vibe?: Vibe | null
 
 export function getSurpriseById(id: string): Surprise | undefined {
   const s = SURPRISES.find((item) => item.id === id);
-  if (!s) return undefined;
-  if (!s.gif && s.gifUrl) {
-    s.gif = createAuthoritativeGif(s.id, s.title, s.character, s.gifUrl);
+  const found = s || SURPRISES[0];
+  if (found && !found.gif && found.gifUrl) {
+    found.gif = createAuthoritativeGif(found.id, found.title, found.character, found.gifUrl);
   }
-  return s;
+  return found;
 }
 
 export function getVibeMeta(vibe: Vibe): VibeMeta {

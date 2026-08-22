@@ -5,6 +5,7 @@ import { FESTIVAL_THEMES } from "@/lib/festival-themes";
 import { sanitizeText, parseMusicUrl, generateOpaqueId, checkRateLimit } from "@/lib/security";
 import { createPostcard } from "@/lib/postcard-store-server";
 import { validateName, validateCityText, validateRelationshipText } from "@/lib/name-validation";
+import { trackEvent } from "@/lib/analytics";
 
 function getValidSurpriseIds(): Set<string> {
   return new Set(SURPRISES.map((s) => s.id));
@@ -85,9 +86,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const senderKey = req.cookies.get("sender_session")?.value || req.headers.get("x-sender-key") || body.senderKey || null;
+
     // Sanitize user text
     const payloadData = {
       themeId: cleanThemeId,
+      senderKey,
       receiverName: rRes.normalized,
       city: cRes.normalized,
       relationship: relRes.normalized,
@@ -95,13 +99,15 @@ export async function POST(req: NextRequest) {
       senderGender: body.senderGender === "female" ? "female" : "male",
       vibe: cleanVibe,
       surpriseId: surpriseId || "cl-timeless",
-      message: sanitizeText(message).slice(0, 1200),
+      message: sanitizeText(message).slice(0, 500),
       musicUrl: cleanMusicUrl,
       musicPlatform,
       musicTitle,
     };
 
     const { token } = await createPostcard(payloadData);
+    trackEvent({ event: "postcard_created", themeId: cleanThemeId });
+    trackEvent({ event: "postcard_sent", themeId: cleanThemeId });
 
     return NextResponse.json({
       ok: true,

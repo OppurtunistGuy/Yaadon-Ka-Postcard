@@ -13,6 +13,7 @@ datasource db {
 model Postcard {
   id           String   @id @default(cuid())
   token        String   @unique
+  senderKey    String?
   receiverName String
   city         String
   relationship String
@@ -27,9 +28,25 @@ model Postcard {
   musicTitle    String?
   openedAt     DateTime?
   revealedAt   DateTime?
+  claimedAt    DateTime?
   reaction     String?
+  rating       Int?
+  comment      String?
+  publicName   String?
+  isPublic     Boolean  @default(false)
   createdAt    DateTime @default(now())
 
   @@index([token])
+  @@index([senderKey])
 }
 
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  event     String   // postcard_created, postcard_sent, postcard_opened, surprise_revealed, feedback_submitted
+  themeId   String?  // classic, rakhi, ganpati
+  rating    Int?     // 1-5 for feedback_submitted
+  createdAt DateTime @default(now())
+
+  @@index([event])
+  @@index([createdAt])
+}
