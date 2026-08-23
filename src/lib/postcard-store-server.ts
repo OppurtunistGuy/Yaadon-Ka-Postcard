@@ -146,6 +146,13 @@ export async function createPostcard(payload: PostcardPayload): Promise<{ token:
     themeId: payload.themeId || "classic",
     surpriseId: payload.surpriseId || null,
     senderGender: payload.senderGender || "male",
+    openedAt: null,
+    revealedAt: null,
+    claimedAt: null,
+    reaction: null,
+    rating: null,
+    comment: null,
+    isPublic: false,
   };
 
   // Cache in server memory map immediately
