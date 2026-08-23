@@ -298,8 +298,7 @@ export const PostcardCard = forwardRef<
             Boolean(
               data.surprise &&
                 data.surprise.id &&
-                data.surprise.id !== "none" &&
-                data.surprise.type !== "none"
+                data.surprise.id !== "none"
             ) &&
             data.surprise && (
               <SurpriseSlot
