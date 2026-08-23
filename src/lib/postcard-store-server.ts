@@ -82,7 +82,7 @@ export function decodeSelfContainedToken(rawToken: string): PostcardPayload | nu
       const buf = Buffer.from(rawStr, "base64url");
       const decompressed = zlib.inflateRawSync(buf).toString("utf-8");
       const d = JSON.parse(decompressed);
-      if (d && (d.r || d.receiverName) && (d.i || d.surpriseId)) {
+      if (d && (d.r || d.receiverName)) {
         return {
           token: cleanToken,
           themeId: d.t || d.themeId || "classic",
@@ -92,7 +92,7 @@ export function decodeSelfContainedToken(rawToken: string): PostcardPayload | nu
           senderName: d.s || d.senderName || "",
           senderGender: d.g || d.senderGender || "male",
           vibe: d.v || d.vibe || "classic",
-          surpriseId: d.i || d.surpriseId,
+          surpriseId: d.i ?? d.surpriseId ?? null,
           message: d.m || d.message || "",
           musicUrl: d.mu || d.musicUrl || null,
           musicPlatform: d.mp || d.musicPlatform || null,
@@ -111,7 +111,7 @@ export function decodeSelfContainedToken(rawToken: string): PostcardPayload | nu
       const rawStr = cleanToken.slice(2);
       const json = Buffer.from(rawStr, "base64url").toString("utf-8");
       const d = JSON.parse(json);
-      if (d && (d.r || d.receiverName) && (d.i || d.surpriseId)) {
+      if (d && (d.r || d.receiverName)) {
         return {
           token: cleanToken,
           themeId: d.t || d.themeId || "classic",
@@ -121,7 +121,7 @@ export function decodeSelfContainedToken(rawToken: string): PostcardPayload | nu
           senderName: d.s || d.senderName || "",
           senderGender: d.g || d.senderGender || "male",
           vibe: d.v || d.vibe || "classic",
-          surpriseId: d.i || d.surpriseId,
+          surpriseId: d.i ?? d.surpriseId ?? null,
           message: d.m || d.message || "",
           musicUrl: d.mu || d.musicUrl || null,
           musicPlatform: d.mp || d.musicPlatform || null,
@@ -138,7 +138,7 @@ export function decodeSelfContainedToken(rawToken: string): PostcardPayload | nu
   try {
     const json = Buffer.from(cleanToken, "base64url").toString("utf-8");
     const d = JSON.parse(json);
-    if (d && (d.r || d.receiverName) && (d.i || d.surpriseId)) {
+    if (d && (d.r || d.receiverName)) {
       return {
         token: cleanToken,
         themeId: d.t || d.themeId || "classic",
@@ -148,7 +148,7 @@ export function decodeSelfContainedToken(rawToken: string): PostcardPayload | nu
         senderName: d.s || d.senderName || "",
         senderGender: d.g || d.senderGender || "male",
         vibe: d.v || d.vibe || "classic",
-        surpriseId: d.i || d.surpriseId,
+        surpriseId: d.i ?? d.surpriseId ?? null,
         message: d.m || d.message || "",
         musicUrl: d.mu || d.musicUrl || null,
         musicPlatform: d.mp || d.musicPlatform || null,
@@ -164,7 +164,6 @@ export function decodeSelfContainedToken(rawToken: string): PostcardPayload | nu
 }
 
 export async function createPostcard(payload: PostcardPayload): Promise<{ token: string }> {
-  // Generate a clean, short 8-character unpredictable random ID (e.g. a7K9xQ2m)
   const shortToken = generateOpaqueId(8);
 
   try {
@@ -187,13 +186,14 @@ export async function createPostcard(payload: PostcardPayload): Promise<{ token:
     await (db.postcard as any).create({
       data: dataToInsert,
     });
-    // Cache in server memory map
     postcardCache.set(shortToken, { ...payload, token: shortToken });
     return { token: shortToken };
   } catch (e) {
-    console.warn("[createPostcard] DB save notice (in-memory mapping active):", e);
+    console.warn("[createPostcard] DB save notice (stateless compressed fallback active):", e);
+    const selfContainedToken = encodeSelfContainedToken(payload);
+    postcardCache.set(selfContainedToken, { ...payload, token: selfContainedToken });
     postcardCache.set(shortToken, { ...payload, token: shortToken });
-    return { token: shortToken };
+    return { token: selfContainedToken };
   }
 }
 
