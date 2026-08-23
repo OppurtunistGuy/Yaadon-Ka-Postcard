@@ -45,20 +45,21 @@ export const db =
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = db
 
-// Ensure tables exist asynchronously
+// Ensure tables exist asynchronously with nullable surpriseId and full schema fields
 if (!globalForPrisma.initialized) {
   globalForPrisma.initialized = true
   db.$executeRawUnsafe(`
     CREATE TABLE IF NOT EXISTS "Postcard" (
       "id" TEXT NOT NULL PRIMARY KEY,
       "token" TEXT NOT NULL,
+      "senderKey" TEXT,
       "receiverName" TEXT NOT NULL,
       "city" TEXT NOT NULL,
       "relationship" TEXT NOT NULL,
       "senderName" TEXT NOT NULL,
       "senderGender" TEXT DEFAULT 'male',
       "vibe" TEXT NOT NULL,
-      "surpriseId" TEXT NOT NULL,
+      "surpriseId" TEXT,
       "message" TEXT NOT NULL,
       "themeId" TEXT,
       "musicUrl" TEXT,
@@ -66,7 +67,12 @@ if (!globalForPrisma.initialized) {
       "musicTitle" TEXT,
       "openedAt" DATETIME,
       "revealedAt" DATETIME,
+      "claimedAt" DATETIME,
       "reaction" TEXT,
+      "rating" INTEGER,
+      "comment" TEXT,
+      "publicName" TEXT,
+      "isPublic" BOOLEAN DEFAULT 0,
       "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
   `).then(() => {

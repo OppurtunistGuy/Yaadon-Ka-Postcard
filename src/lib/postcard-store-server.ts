@@ -12,7 +12,7 @@ export interface PostcardPayload {
   senderName: string;
   senderGender?: string | null;
   vibe: string;
-  surpriseId: string;
+  surpriseId?: string | null;
   message: string;
   musicUrl?: string | null;
   musicPlatform?: string | null;
@@ -39,37 +39,7 @@ if (!globalForPostcards.postcardCache) {
 const postcardCache = globalForPostcards.postcardCache;
 
 /**
- * Encodes payload into a compact, self-contained compressed token.
- * Uses deflateRaw binary compression + base64url for ultra-short URL tokens.
- */
-export function encodeSelfContainedToken(payload: PostcardPayload): string {
-  const compact = {
-    t: payload.themeId || "classic",
-    r: payload.receiverName,
-    c: payload.city,
-    l: payload.relationship,
-    s: payload.senderName,
-    g: payload.senderGender || "male",
-    v: payload.vibe,
-    i: payload.surpriseId,
-    m: payload.message,
-    mu: payload.musicUrl || null,
-    mp: payload.musicPlatform || null,
-    mt: payload.musicTitle || null,
-  };
-  const json = JSON.stringify(compact);
-  try {
-    const compressed = zlib.deflateRawSync(Buffer.from(json, "utf-8"));
-    const base64url = compressed.toString("base64url");
-    return `p_${base64url}`;
-  } catch {
-    const base64 = Buffer.from(json, "utf-8").toString("base64url");
-    return `P_${base64}`;
-  }
-}
-
-/**
- * Decodes compressed (`p_...`), uncompressed (`P_...`), or legacy raw tokens into a full PostcardPayload object.
+ * Decodes legacy compressed (`p_...`), uncompressed (`P_...`), or raw tokens for backwards compatibility with older links.
  */
 export function decodeSelfContainedToken(rawToken: string): PostcardPayload | null {
   if (!rawToken) return null;
@@ -163,8 +133,23 @@ export function decodeSelfContainedToken(rawToken: string): PostcardPayload | nu
   return null;
 }
 
+/**
+ * Creates a new postcard and ALWAYS returns an 8-character random ID (e.g. /p/a7K9xQ2m).
+ * Stores payload server-side in DB + memory map. Never outputs long encoded tokens.
+ */
 export async function createPostcard(payload: PostcardPayload): Promise<{ token: string }> {
   const shortToken = generateOpaqueId(8);
+
+  const fullPayload: PostcardPayload = {
+    ...payload,
+    token: shortToken,
+    themeId: payload.themeId || "classic",
+    surpriseId: payload.surpriseId || null,
+    senderGender: payload.senderGender || "male",
+  };
+
+  // Cache in server memory map immediately
+  postcardCache.set(shortToken, fullPayload);
 
   try {
     const dataToInsert: any = {
@@ -186,15 +171,12 @@ export async function createPostcard(payload: PostcardPayload): Promise<{ token:
     await (db.postcard as any).create({
       data: dataToInsert,
     });
-    postcardCache.set(shortToken, { ...payload, token: shortToken });
-    return { token: shortToken };
   } catch (e) {
-    console.warn("[createPostcard] DB save notice (stateless compressed fallback active):", e);
-    const selfContainedToken = encodeSelfContainedToken(payload);
-    postcardCache.set(selfContainedToken, { ...payload, token: selfContainedToken });
-    postcardCache.set(shortToken, { ...payload, token: shortToken });
-    return { token: selfContainedToken };
+    console.warn("[createPostcard] DB insert notice (cached in server memory):", e);
   }
+
+  // ALWAYS return the clean, 8-character short token (e.g. /p/a7K9xQ2m)
+  return { token: shortToken };
 }
 
 export async function fetchPostcardByToken(rawToken: string): Promise<PostcardPayload | null> {
@@ -242,7 +224,7 @@ export async function fetchPostcardByToken(rawToken: string): Promise<PostcardPa
     console.warn("[fetchPostcardByToken] DB lookup notice:", e);
   }
 
-  // 3. Decode compressed or self-contained token
+  // 3. Decode legacy compressed or self-contained token (for backwards compatibility with older links)
   const decoded = decodeSelfContainedToken(token);
   if (decoded) {
     postcardCache.set(token, decoded);
