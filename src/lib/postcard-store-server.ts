@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import { db } from "./db";
 import { generateOpaqueId } from "./security";
+import { saveToCloudKv, fetchFromCloudKv } from "./cloud-store";
 
 export interface PostcardPayload {
   token?: string;
@@ -178,7 +179,7 @@ export function decodeSelfContainedToken(rawToken: string): PostcardPayload | nu
 
 /**
  * Creates a new postcard and ALWAYS returns an 8-character random ID (e.g. /p/a7K9xQ2m).
- * Stores payload server-side in DB + memory map + backup file.
+ * Stores payload server-side in DB + memory map + backup file + cloud KV.
  */
 export async function createPostcard(payload: PostcardPayload): Promise<{ token: string }> {
   const shortToken = generateOpaqueId(8);
@@ -201,6 +202,9 @@ export async function createPostcard(payload: PostcardPayload): Promise<{ token:
   // Cache in server memory map + backup file immediately
   postcardCache.set(shortToken, fullPayload);
   saveToBackupFile(shortToken, fullPayload);
+
+  // Sync to Cloud KV Store (Upstash Redis / Vercel KV)
+  await saveToCloudKv(shortToken, fullPayload).catch(() => {});
 
   try {
     const dataToInsert: any = {
@@ -283,7 +287,15 @@ export async function fetchPostcardByToken(rawToken: string): Promise<PostcardPa
     return backup;
   }
 
-  // 4. Decode legacy compressed or self-contained token (for backwards compatibility with older links)
+  // 4. Check Cloud KV Store (Upstash Redis / Vercel KV)
+  const cloudCard = await fetchFromCloudKv(token);
+  if (cloudCard) {
+    postcardCache.set(token, cloudCard);
+    saveToBackupFile(token, cloudCard);
+    return cloudCard;
+  }
+
+  // 5. Decode legacy compressed or self-contained token (for backwards compatibility with older links)
   const decoded = decodeSelfContainedToken(token);
   if (decoded) {
     postcardCache.set(token, decoded);
@@ -300,5 +312,6 @@ export function updateCachedPostcard(token: string, updates: Partial<PostcardPay
     const updated = { ...existing, ...updates };
     postcardCache.set(token, updated);
     saveToBackupFile(token, updated);
+    saveToCloudKv(token, updated).catch(() => {});
   }
 }
