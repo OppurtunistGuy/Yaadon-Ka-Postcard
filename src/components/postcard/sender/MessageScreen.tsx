@@ -89,16 +89,16 @@ export function MessageScreen() {
       />
 
       <main className="flex-1 px-4 sm:px-8 py-6">
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="grid lg:grid-cols-[1fr_1.1fr] gap-5 items-start"
+            className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start"
           >
             {/* editor column */}
             <div
-              className="paper-grain paper-stains rounded-lg p-5 vignette"
+              className="lg:col-span-5 paper-grain paper-stains rounded-lg p-5 vignette"
               style={{ border: "1px solid var(--border)" }}
             >
               <h2
@@ -246,33 +246,35 @@ export function MessageScreen() {
               </div>
             </div>
 
-            {/* live preview */}
-            <div>
+            {/* live preview column */}
+            <div className="lg:col-span-7 w-full">
               <div
                 className="font-serif-vintage text-[10px] uppercase tracking-[0.2em] mb-2 text-center"
                 style={{ color: "var(--ink-soft)" }}
               >
                 Live preview
               </div>
-              <PostcardCard
-                data={{
-                  themeId: draft.themeId,
-                  receiverName: draft.receiverName,
-                  city: draft.city,
-                  relationship: draft.relationship,
-                  senderName: draft.senderName,
-                  senderGender: draft.senderGender,
-                  message: draft.message,
-                  surprise: surprise || null,
-                  vibeLabel: vibeMeta.label,
-                  vibeEmoji: vibeMeta.emoji,
-                  musicUrl: draft.musicUrl,
-                  musicPlatform: draft.musicPlatform,
-                  musicTitle: draft.musicTitle,
-                }}
-                revealState="hidden"
-                className="animate-float-soft"
-              />
+              <div className="w-full max-w-2xl mx-auto">
+                <PostcardCard
+                  data={{
+                    themeId: draft.themeId,
+                    receiverName: draft.receiverName,
+                    city: draft.city,
+                    relationship: draft.relationship,
+                    senderName: draft.senderName,
+                    senderGender: draft.senderGender,
+                    message: draft.message,
+                    surprise: surprise || null,
+                    vibeLabel: vibeMeta.label,
+                    vibeEmoji: vibeMeta.emoji,
+                    musicUrl: draft.musicUrl,
+                    musicPlatform: draft.musicPlatform,
+                    musicTitle: draft.musicTitle,
+                  }}
+                  revealState="hidden"
+                  className="animate-float-soft"
+                />
+              </div>
             </div>
           </motion.div>
 
