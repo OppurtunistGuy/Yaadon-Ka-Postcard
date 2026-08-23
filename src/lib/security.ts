@@ -3,17 +3,39 @@
  * Prevents XSS, open redirects, executable URL schemes, and invalid music links.
  */
 
-// Simple robust HTML escaping to sanitize any untrusted text before rendering/storing
+/**
+ * Decodes HTML entities back into plain text characters.
+ * Handles single or double-encoded entities (e.g., &amp;#x27; -> &#x27; -> ').
+ */
+export function decodeHtmlEntities(input?: string | null): string {
+  if (!input) return "";
+  let str = input;
+  for (let i = 0; i < 2; i++) {
+    const prev = str;
+    str = str
+      .replace(/&#x27;/gi, "'")
+      .replace(/&#39;/g, "'")
+      .replace(/&quot;/gi, '"')
+      .replace(/&#x2F;/gi, "/")
+      .replace(/&#47;/g, "/")
+      .replace(/&lt;/gi, "<")
+      .replace(/&gt;/gi, ">")
+      .replace(/&amp;/gi, "&");
+    if (str === prev) break;
+  }
+  return str;
+}
+
+/**
+ * Sanitizes plain text input by normalizing HTML entities and stripping
+ * non-printable control characters, preserving quotes (', "), ampersands (&),
+ * emojis, newlines, and unicode text exactly as entered.
+ */
 export function sanitizeText(input?: string | null): string {
   if (!input) return "";
-  return input
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#x27;")
-    .replace(/\//g, "&#x2F;")
-    .trim();
+  let text = decodeHtmlEntities(input);
+  text = text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
+  return text.trim();
 }
 
 /**

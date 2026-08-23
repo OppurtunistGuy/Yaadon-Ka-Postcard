@@ -13,7 +13,7 @@ import { FaintRakhiBackground, FaintGanpatiBackground, RakhiImageBackground, Gan
 import type { Surprise } from "@/lib/surprises";
 import { getFestivalTheme } from "@/lib/festival-themes";
 import { getGanpatiImage } from "@/lib/festival-assets";
-import { validateHttpsUrl } from "@/lib/security";
+import { validateHttpsUrl, decodeHtmlEntities } from "@/lib/security";
 import { ExternalLink, Sparkles, BookOpen } from "lucide-react";
 
 export interface PostcardData {
@@ -78,12 +78,12 @@ export const PostcardCard = forwardRef<
   const theme = getFestivalTheme(data.themeId);
   const validatedMusicUrl = validateHttpsUrl(data.musicUrl);
 
-  const rawMessage = data.message || "Yahan tera message hoga — dil se likhi hui do baatein...";
-  const isLongMessage = rawMessage.length > 300;
-  const visibleMessage = isLongMessage && !expandedMessage ? `${rawMessage.slice(0, 280)}...` : rawMessage;
+  const cleanMessage = decodeHtmlEntities(data.message || "Yahan tera message hoga — dil se likhi hui do baatein...");
+  const isLongMessage = cleanMessage.length > 320;
+  const visibleMessage = isLongMessage && !expandedMessage ? `${cleanMessage.slice(0, 300)}...` : cleanMessage;
 
-  const startsWithGreeting = /^(dear|priy|pyaare|hello|hi|namaste)\b/i.test(rawMessage.trim());
-  const receiverName = data.receiverName || "Dost";
+  const startsWithGreeting = /^(dear|priy|pyaare|hello|hi|namaste)\b/i.test(cleanMessage.trim());
+  const receiverName = decodeHtmlEntities(data.receiverName || "Dost");
   const formattedGreeting = startsWithGreeting ? "" : `Dear ${receiverName},`;
 
   return (
