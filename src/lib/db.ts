@@ -3,6 +3,9 @@ import fs from 'fs'
 import path from 'path'
 
 function getDatabaseUrl() {
+  if (process.env.DATABASE_URL && !process.env.DATABASE_URL.startsWith("file:")) {
+    return process.env.DATABASE_URL;
+  }
   if (process.env.VERCEL) {
     const tmpDbPath = '/tmp/custom.db'
     if (!fs.existsSync(tmpDbPath)) {

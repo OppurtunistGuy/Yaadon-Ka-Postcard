@@ -1,4 +1,6 @@
 import zlib from "zlib";
+import fs from "fs";
+import path from "path";
 import { db } from "./db";
 import { generateOpaqueId } from "./security";
 
@@ -37,6 +39,47 @@ if (!globalForPostcards.postcardCache) {
 }
 
 const postcardCache = globalForPostcards.postcardCache;
+
+const backupFilePath = process.env.VERCEL
+  ? "/tmp/postcards_backup.json"
+  : path.join(process.cwd(), "prisma", "db", "postcards_backup.json");
+
+function saveToBackupFile(token: string, payload: PostcardPayload): void {
+  try {
+    let data: Record<string, PostcardPayload> = {};
+    if (fs.existsSync(backupFilePath)) {
+      try {
+        data = JSON.parse(fs.readFileSync(backupFilePath, "utf-8"));
+      } catch {
+        data = {};
+      }
+    }
+    data[token] = payload;
+    const dir = path.dirname(backupFilePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(backupFilePath, JSON.stringify(data, null, 2), "utf-8");
+  } catch {
+    // ignore
+  }
+}
+
+function readFromBackupFile(token: string): PostcardPayload | null {
+  try {
+    if (fs.existsSync(backupFilePath)) {
+      const data: Record<string, PostcardPayload> = JSON.parse(
+        fs.readFileSync(backupFilePath, "utf-8")
+      );
+      if (data && data[token]) {
+        return data[token];
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+}
 
 /**
  * Decodes legacy compressed (`p_...`), uncompressed (`P_...`), or raw tokens for backwards compatibility with older links.
@@ -135,7 +178,7 @@ export function decodeSelfContainedToken(rawToken: string): PostcardPayload | nu
 
 /**
  * Creates a new postcard and ALWAYS returns an 8-character random ID (e.g. /p/a7K9xQ2m).
- * Stores payload server-side in DB + memory map. Never outputs long encoded tokens.
+ * Stores payload server-side in DB + memory map + backup file.
  */
 export async function createPostcard(payload: PostcardPayload): Promise<{ token: string }> {
   const shortToken = generateOpaqueId(8);
@@ -155,8 +198,9 @@ export async function createPostcard(payload: PostcardPayload): Promise<{ token:
     isPublic: false,
   };
 
-  // Cache in server memory map immediately
+  // Cache in server memory map + backup file immediately
   postcardCache.set(shortToken, fullPayload);
+  saveToBackupFile(shortToken, fullPayload);
 
   try {
     const dataToInsert: any = {
@@ -225,13 +269,21 @@ export async function fetchPostcardByToken(rawToken: string): Promise<PostcardPa
         createdAt: cardFromDb.createdAt,
       };
       postcardCache.set(token, result);
+      saveToBackupFile(token, result);
       return result;
     }
   } catch (e) {
     console.warn("[fetchPostcardByToken] DB lookup notice:", e);
   }
 
-  // 3. Decode legacy compressed or self-contained token (for backwards compatibility with older links)
+  // 3. Check JSON Backup File
+  const backup = readFromBackupFile(token);
+  if (backup) {
+    postcardCache.set(token, backup);
+    return backup;
+  }
+
+  // 4. Decode legacy compressed or self-contained token (for backwards compatibility with older links)
   const decoded = decodeSelfContainedToken(token);
   if (decoded) {
     postcardCache.set(token, decoded);
@@ -243,8 +295,10 @@ export async function fetchPostcardByToken(rawToken: string): Promise<PostcardPa
 
 export function updateCachedPostcard(token: string, updates: Partial<PostcardPayload>): void {
   if (!token) return;
-  const existing = postcardCache.get(token);
+  const existing = postcardCache.get(token) || readFromBackupFile(token);
   if (existing) {
-    postcardCache.set(token, { ...existing, ...updates });
+    const updated = { ...existing, ...updates };
+    postcardCache.set(token, updated);
+    saveToBackupFile(token, updated);
   }
 }
