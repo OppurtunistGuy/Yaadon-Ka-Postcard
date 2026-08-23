@@ -233,3 +233,11 @@ export async function fetchPostcardByToken(rawToken: string): Promise<PostcardPa
 
   return null;
 }
+
+export function updateCachedPostcard(token: string, updates: Partial<PostcardPayload>): void {
+  if (!token) return;
+  const existing = postcardCache.get(token);
+  if (existing) {
+    postcardCache.set(token, { ...existing, ...updates });
+  }
+}

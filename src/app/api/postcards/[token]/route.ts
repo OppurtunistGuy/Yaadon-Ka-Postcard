@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getSurpriseById, getVibeMeta } from "@/lib/surprises";
 import { checkRateLimit, sanitizeText } from "@/lib/security";
-import { fetchPostcardByToken } from "@/lib/postcard-store-server";
+import { fetchPostcardByToken, updateCachedPostcard } from "@/lib/postcard-store-server";
 import { trackEvent } from "@/lib/analytics";
 
 function formatPublicDisplayName(rawName?: string | null): string | null {
@@ -159,6 +159,7 @@ export async function PATCH(
       } catch {
         // ignore DB update failure
       }
+      updateCachedPostcard(token, data);
     }
 
     return NextResponse.json({
