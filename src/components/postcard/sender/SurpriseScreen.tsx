@@ -114,7 +114,7 @@ export function SurpriseScreen() {
           <div className="mb-6 text-center">
             <h2 className="font-serif-vintage text-2xl sm:text-3xl font-bold flex items-center justify-center gap-2 text-[var(--burgundy)]">
               {isClassicMode && <span>✉️ Classic Postcard Surprise ✉️</span>}
-              {isRakhiMode && <span>🪡 Rakhi Festival Surprise 🪡</span>}
+              {isRakhiMode && <span>🌸 Rakhi Festival Surprise 🌸</span>}
               {isGanpatiMode && <span>🕉️ Ganpati Bappa Surprise 🕉️</span>}
             </h2>
             <p className="font-handwritten text-sm text-[var(--ink-soft)] mt-0.5">

@@ -34,7 +34,7 @@ export function ReceiverSplash({
       )}
       {isRakhi && (
         <div className="absolute inset-0 pointer-events-none opacity-20 flex items-center justify-between px-6 sm:px-16" aria-hidden>
-          <span className="text-6xl sm:text-8xl">🪡</span>
+          <span className="text-6xl sm:text-8xl">🌸</span>
           <span className="text-6xl sm:text-8xl">🏵️</span>
         </div>
       )}

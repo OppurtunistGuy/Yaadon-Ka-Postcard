@@ -1,6 +1,7 @@
 "use client";
 
-import { forwardRef, useState } from "react";
+import { forwardRef, useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { PaperBackground } from "./PaperBackground";
 import { AirmailBorder } from "./AirmailBorder";
@@ -8,6 +9,7 @@ import { PostageStamp, Postmark } from "./Stamp";
 import { WaxSeal } from "./Decorations";
 import { GifDisplay } from "./GifDisplay";
 import { VirtualRakhiDisplay } from "./VirtualRakhiDisplay";
+import { FaintRakhiBackground, FaintGanpatiBackground, RakhiImageBackground, GanpatiImageBackground } from "./FaintRakhiBackground";
 import type { Surprise } from "@/lib/surprises";
 import { getFestivalTheme } from "@/lib/festival-themes";
 import { getGanpatiImage } from "@/lib/festival-assets";
@@ -47,6 +49,31 @@ export const PostcardCard = forwardRef<
   const isRevealed = revealState === "revealed";
   const isPlain = revealState === "plain";
   const [expandedMessage, setExpandedMessage] = useState(false);
+  const [stampState, setStampState] = useState<"theme" | "postmark">("postmark");
+
+  useEffect(() => {
+    if (data.themeId !== "rakhi" && data.themeId !== "ganpati") {
+      setStampState("postmark");
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setStampState((prev) => (prev === "theme" ? "postmark" : "theme"));
+    }, 3500);
+
+    return () => clearInterval(timer);
+  }, [data.themeId]);
+
+  let themeBadgeIcon = "✨";
+  let themeBadgeLabel = "CLASSIC POSTCARD";
+
+  if (data.themeId === "rakhi") {
+    themeBadgeIcon = "🌸";
+    themeBadgeLabel = "RAKHI SPECIAL";
+  } else if (data.themeId === "ganpati") {
+    themeBadgeIcon = "🕉️";
+    themeBadgeLabel = "GANPATI SPECIAL";
+  }
 
   const theme = getFestivalTheme(data.themeId);
   const validatedMusicUrl = validateHttpsUrl(data.musicUrl);
@@ -54,6 +81,10 @@ export const PostcardCard = forwardRef<
   const rawMessage = data.message || "Yahan tera message hoga — dil se likhi hui do baatein...";
   const isLongMessage = rawMessage.length > 300;
   const visibleMessage = isLongMessage && !expandedMessage ? `${rawMessage.slice(0, 280)}...` : rawMessage;
+
+  const startsWithGreeting = /^(dear|priy|pyaare|hello|hi|namaste)\b/i.test(rawMessage.trim());
+  const receiverName = data.receiverName || "Dost";
+  const formattedGreeting = startsWithGreeting ? "" : `Dear ${receiverName},`;
 
   return (
     <PaperBackground
@@ -67,17 +98,9 @@ export const PostcardCard = forwardRef<
       {/* Airmail outer border */}
       <AirmailBorder thickness="md">
         <div className="p-4 sm:p-5 relative">
-          {/* Theme Watermark Emblem */}
-          {data.themeId === "ganpati" && (
-            <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none select-none text-9xl">
-              🕉️
-            </div>
-          )}
-          {data.themeId === "rakhi" && (
-            <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none select-none text-9xl">
-              🪡
-            </div>
-          )}
+          {/* Official Theme Background Image Assets (Low Opacity Multiply Blend) */}
+          {data.themeId === "rakhi" && <RakhiImageBackground />}
+          {data.themeId === "ganpati" && <GanpatiImageBackground />}
 
           {/* Corner theme decoration icon */}
           {theme.cornerDecorationEmoji && (
@@ -89,47 +112,90 @@ export const PostcardCard = forwardRef<
             </div>
           )}
 
-          {/* ===== Header: stamps + postmark ===== */}
+          {/* ===== Header: Theme Badge, Title & Dynamic Stamp ===== */}
           <div className="flex items-start justify-between gap-3">
+            {/* Left: Theme Badge & Postcard Title */}
             <div className="flex flex-col gap-1 min-w-0">
+              {/* Theme Identity Badge (Approved Mockup Spec) */}
               <div
-                className="font-serif-vintage italic text-[11px] tracking-wide"
-                style={{ color: "var(--ink-soft)" }}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-dashed text-[10px] font-serif-vintage tracking-widest font-bold uppercase w-fit"
+                style={{
+                  borderColor: "var(--border)",
+                  color: "var(--burgundy)",
+                  backgroundColor: "rgba(255, 255, 255, 0.4)",
+                }}
               >
-                Inland Postcard · Bharat
+                <span>{themeBadgeIcon}</span>
+                <span>{themeBadgeLabel}</span>
               </div>
+
+              {/* Postcard Main Title */}
               <div
-                className="font-serif-vintage text-lg sm:text-xl font-bold leading-tight"
+                className="font-serif-vintage text-lg sm:text-xl font-bold leading-tight mt-0.5"
                 style={{ color: theme.accentColor }}
               >
                 Yaadon ka Postcard
               </div>
+
+              {/* Subtitle / Ribbon */}
               <div
                 className="inline-flex items-center gap-1 text-[10px] tracking-[0.18em] uppercase"
                 style={{ color: "var(--ink-soft)" }}
               >
-                <span>{theme.ribbonText}</span>
+                <span>{theme.ribbonText || "♡ POSTED WITH LOVE ♡"}</span>
               </div>
             </div>
 
-            <div className="flex items-start gap-2 shrink-0">
-              <Postmark
-                label={theme.postmarkText}
-                city={data.city || "India"}
-                date={date}
-                animate={isRevealed}
-              />
-              <PostageStamp accent={theme.accentColor}>
-                <div className="px-2 py-1.5 min-w-[54px] min-h-[64px] flex flex-col items-center justify-center">
-                  <div className="text-[9px] font-bold uppercase tracking-widest text-amber-900/70">
-                    {theme.stampLabel}
-                  </div>
-                  <div className="text-xl my-0.5">{data.vibeEmoji || "📮"}</div>
-                  <div className="text-[8px] font-serif-vintage italic text-amber-950 font-bold">
-                    {data.vibeLabel || "Special"}
-                  </div>
-                </div>
-              </PostageStamp>
+            {/* Right: Fixed-size Stamp Container (Zero Layout Shift) */}
+            <div className="shrink-0 w-[92px] h-[92px] relative flex items-center justify-center">
+              {data.themeId !== "rakhi" && data.themeId !== "ganpati" ? (
+                /* CLASSIC MODE: Fixed timestamp postmark only */
+                <Postmark
+                  label={theme.postmarkText}
+                  city={data.city || "India"}
+                  date={date}
+                  animate={isRevealed}
+                />
+              ) : (
+                /* RAKHI / GANPATI SPECIAL MODE: Alternates every 3-5 sec */
+                <AnimatePresence mode="wait">
+                  {stampState === "postmark" ? (
+                    <motion.div
+                      key="postmark-state"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.4 }}
+                      className="absolute inset-0 flex items-center justify-center"
+                    >
+                      <Postmark
+                        label={theme.postmarkText}
+                        city={data.city || "India"}
+                        date={date}
+                        animate={false}
+                      />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="theme-state"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.4 }}
+                      className="absolute inset-0 flex items-center justify-center"
+                    >
+                      <PostageStamp accent={theme.accentColor} rotate={-3}>
+                        <div className="px-1.5 py-1 min-w-[56px] min-h-[64px] max-w-[70px] max-h-[72px] flex flex-col items-center justify-center text-center">
+                          <div className="text-xl my-0.5">{themeBadgeIcon}</div>
+                          <div className="text-[8px] font-serif-vintage uppercase font-bold tracking-wider text-amber-950 leading-tight">
+                            {themeBadgeLabel}
+                          </div>
+                        </div>
+                      </PostageStamp>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              )}
             </div>
           </div>
 
@@ -138,15 +204,16 @@ export const PostcardCard = forwardRef<
           {/* ===== Main body: Message & Recipient ===== */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
             {/* Left: Message column */}
-            <div className="md:col-span-7 flex flex-col justify-between space-y-3 min-h-[140px]">
+            <div className="md:col-span-7 flex flex-col justify-between space-y-3 min-h-[130px]">
               <div>
-                <div
-                  className="font-serif-vintage text-xs uppercase tracking-wider font-bold mb-1"
-                  style={{ color: "var(--burgundy)" }}
-                >
-                  Priy {data.receiverName || "Dost"},
-                </div>
-
+                {formattedGreeting && (
+                  <div
+                    className="font-serif-vintage text-xs sm:text-sm font-bold mb-1.5 leading-snug"
+                    style={{ color: "var(--burgundy)" }}
+                  >
+                    {formattedGreeting}
+                  </div>
+                )}
                 <div
                   className="font-handwritten text-base leading-relaxed whitespace-pre-wrap break-words"
                   style={{ color: "var(--ink)" }}
@@ -166,7 +233,7 @@ export const PostcardCard = forwardRef<
                 )}
               </div>
 
-              <div className="pt-2 text-right">
+              <div className="pt-1 text-right">
                 <div
                   className="font-handwritten text-sm italic"
                   style={{ color: "var(--ink-soft)" }}
@@ -182,7 +249,7 @@ export const PostcardCard = forwardRef<
               </div>
             </div>
 
-            {/* Right: Recipient lines */}
+            {/* Right: Recipient lines (To & City / Address only) */}
             <div
               className="md:col-span-5 flex flex-col justify-center space-y-3 pt-3 md:pt-0 md:border-l md:pl-4"
               style={{ borderColor: "var(--border)" }}
@@ -217,21 +284,6 @@ export const PostcardCard = forwardRef<
                     {data.city || "___________"}
                   </div>
                 </div>
-
-                <div>
-                  <span
-                    className="font-serif-vintage text-[10px] font-bold uppercase tracking-wider block"
-                    style={{ color: "var(--ink-soft)" }}
-                  >
-                    Rishta:
-                  </span>
-                  <div
-                    className="border-b pb-0.5 text-xs italic"
-                    style={{ borderColor: "var(--border)", color: "var(--ink-soft)" }}
-                  >
-                    {data.relationship || "___________"}
-                  </div>
-                </div>
               </div>
 
               {/* Wax Seal */}
@@ -241,19 +293,26 @@ export const PostcardCard = forwardRef<
             </div>
           </div>
 
-          {/* ===== Surprise section (Hidden until revealed) ===== */}
-          {!isPlain && data.surprise && (
-            <SurpriseSlot
-              surprise={data.surprise}
-              themeAccent={theme.accentColor}
-              isLocked={isLocked}
-              isRevealed={isRevealed}
-              onReveal={onReveal}
-              musicUrl={validatedMusicUrl}
-              musicPlatform={data.musicPlatform}
-              musicTitle={data.musicTitle}
-            />
-          )}
+          {/* ===== Surprise section (Rendered ONLY when an actual theme/attachment surprise exists) ===== */}
+          {!isPlain &&
+            Boolean(
+              data.surprise &&
+                data.surprise.id &&
+                data.surprise.id !== "none" &&
+                data.surprise.type !== "none"
+            ) &&
+            data.surprise && (
+              <SurpriseSlot
+                surprise={data.surprise}
+                themeAccent={theme.accentColor}
+                isLocked={isLocked}
+                isRevealed={isRevealed}
+                onReveal={onReveal}
+                musicUrl={validatedMusicUrl}
+                musicPlatform={data.musicPlatform}
+                musicTitle={data.musicTitle}
+              />
+            )}
         </div>
       </AirmailBorder>
     </PaperBackground>

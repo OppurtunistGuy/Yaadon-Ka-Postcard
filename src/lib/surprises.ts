@@ -119,7 +119,7 @@ export function normalizeGif(
 
 // Authoritative Surprises Master List — includes Celebrity Character options & Festive Options
 export const SURPRISES_RAW: Surprise[] = [
-  // ============ 🪡 RAKHI FESTIVAL SURPRISES & VIRTUAL RAKHIS ============
+  // ============ 🌸 RAKHI FESTIVAL SURPRISES & VIRTUAL RAKHIS ============
   {
     id: "rakhi-dhaaga",
     vibe: "rakhi",
@@ -128,7 +128,7 @@ export const SURPRISES_RAW: Surprise[] = [
     character: "Virtual Rakhi Thread 🕉️",
     quote: "Phoolon ka taron ka sabka kehna hai, ek hazaron mein meri behen/bhai hai!",
     caption: "Shubh Om emblem with golden zardosi thread tied on your postcard.",
-    emoji: "🪡",
+    emoji: "🌸",
     accent: "#b91c1c",
     rakhiId: "rakhi-gold-om",
   },
@@ -727,7 +727,7 @@ export const SURPRISES_RAW: Surprise[] = [
     rakhiId: "rakhi-gold-om",
   },
   {
-    id: "rakhi-mor-pankh-surprise",
+    id: "rakhi-mor-pankh-peacock-surprise",
     vibe: "rakhi",
     type: "festival",
     title: "Mor Pankh Peacock Rakhi 🦚",

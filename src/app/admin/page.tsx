@@ -380,7 +380,7 @@ export default function AdminDashboardPage() {
                 {/* Rakhi Theme */}
                 <div>
                   <div className="flex justify-between text-xs font-serif-vintage font-bold mb-1">
-                    <span>🪡 Rakhi Festival Special</span>
+                    <span>🌸 Rakhi Festival Special</span>
                     <span>
                       {stats?.themeBreakdown.rakhi ?? 0} cards (
                       {themeTotal > 0 ? Math.round(((stats?.themeBreakdown.rakhi || 0) / themeTotal) * 100) : 0}%)
